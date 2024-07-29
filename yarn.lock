@@ -13351,6 +13351,7 @@ __metadata:
     typescript: 5.3.3
     ui: "workspace:^"
     uniswap: "workspace:^"
+    use-async-memo: 1.2.5
     use-resize-observer: 9.1.0
     utilities: "workspace:^"
     uuid: 9.0.0
@@ -41763,6 +41764,15 @@ __metadata:
   version: 8.0.2
   resolution: "urlpattern-polyfill@npm:8.0.2"
   checksum: d2cc0905a613c77e330c426e8697ee522dd9640eda79ac51160a0f6350e103f09b8c327623880989f8ba7325e8d95267b745aa280fdcc2aead80b023e16bd09d
+  languageName: node
+  linkType: hard
+
+"use-async-memo@npm:1.2.5":
+  version: 1.2.5
+  resolution: "use-async-memo@npm:1.2.5"
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: 208a4b6510ff108f86572cb57a10c4137c932b0a1d441e06f06fe1a8150d3a36d79b8b4df47b08bcf5ef21a71a2e326d1227b46495c30d3445b805dc24ae8ab6
   languageName: node
   linkType: hard
 
