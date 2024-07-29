@@ -1,4 +1,3 @@
-import { showTestnetsAtom } from 'components/AccountDrawer/TestnetsToggle'
 import Column from 'components/Column'
 import { DropdownSelector, StyledMenuContent } from 'components/DropdownSelector'
 import { ChainLogo } from 'components/Logo/ChainLogo'
@@ -15,7 +14,6 @@ import {
 import { useAccount } from 'hooks/useAccount'
 import useSelectChain from 'hooks/useSelectChain'
 import { t } from 'i18n'
-import { useAtomValue } from 'jotai/utils'
 import styled, { css, useTheme } from 'lib/styled-components'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { AlertTriangle } from 'react-feather'
@@ -84,7 +82,7 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
   const popoverRef = useRef<Popover>(null)
   const walletSupportsChain = useWalletSupportedChains()
   const isSupportedChain = useIsSupportedChainIdCallback()
-  const showTestnets = useAtomValue(showTestnetsAtom)
+  const showTestnets = true
   const navRefreshEnabled = useFeatureFlag(FeatureFlags.NavRefresh)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectChain = useSelectChain()

@@ -29,6 +29,8 @@
     "'self'",
     "blob:",
     "data:",
+    "https://*.helder-devnets.xyz",
+    "http://135.181.191.125:8015",
     "https://*.alchemy.com",
     "https://*.arbitrum.io",
     "https://*.base.org/",

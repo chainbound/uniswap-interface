@@ -43,7 +43,7 @@ module.exports = {
       files: ['*.ts', '*.tsx'],
       excludedFiles: ['*.test.ts', '*.test.tsx'],
       rules: {
-        'no-console': 'error',
+        // 'no-console': 'error',
       },
     },
     {

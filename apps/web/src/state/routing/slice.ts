@@ -67,10 +67,10 @@ function getRoutingAPIConfig(args: GetQuoteArgs): RoutingConfig {
     routingType: URAQuoteType.DUTCH_V2,
     ...(isXv2Arbitrum
       ? {
-          priceImprovementBps,
-          forceOpenOrders,
-          deadlineBufferSecs,
-        }
+        priceImprovementBps,
+        forceOpenOrders,
+        deadlineBufferSecs,
+      }
       : {}),
   }
 
@@ -100,6 +100,7 @@ export const routingApi = createApi({
   endpoints: (build) => ({
     getQuote: build.query<TradeResult, GetQuoteArgs>({
       queryFn(args, _api, _extraOptions, fetch) {
+        // NOTE: used for many things, also token balances (ETH included)
         return trace({ name: 'Quote', op: 'quote', data: { ...args } }, async (trace) => {
           logSwapQuoteRequest(args.tokenInChainId, args.routerPreference, false)
           const {
@@ -131,6 +132,7 @@ export const routingApi = createApi({
             return trace.child({ name: 'Quote on server', op: 'quote.server' }, async () => {
               const response = await fetch({
                 method: 'POST',
+                // TODO: this should be changed with BOLT RPC
                 url: `${UNISWAP_GATEWAY_DNS_URL}/quote`,
                 body: JSON.stringify(requestBody),
                 headers: {
@@ -169,8 +171,7 @@ export const routingApi = createApi({
             logger.warn(
               'routing/slice',
               'queryFn',
-              `GetQuote failed on Unified Routing API, falling back to client: ${
-                error?.message ?? error?.detail ?? error
+              `GetQuote failed on Unified Routing API, falling back to client: ${error?.message ?? error?.detail ?? error
               }`,
             )
           }

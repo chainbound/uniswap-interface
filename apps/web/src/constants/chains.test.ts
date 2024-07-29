@@ -52,6 +52,7 @@ const chainIdNames: { [chainId in SupportedInterfaceChainId]: string } = {
   [UniverseChainId.Mainnet]: 'mainnet',
   [UniverseChainId.Goerli]: 'goerli',
   [UniverseChainId.Sepolia]: 'sepolia',
+  [UniverseChainId.Helder]: 'helder',
   [UniverseChainId.Polygon]: 'polygon',
   [UniverseChainId.PolygonMumbai]: 'polygon_mumbai',
   [UniverseChainId.Celo]: 'celo',

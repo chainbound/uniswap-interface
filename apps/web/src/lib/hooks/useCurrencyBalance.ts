@@ -9,6 +9,7 @@ import { useMultipleContractSingleData, useSingleContractMultipleData } from 'li
 import { useMemo } from 'react'
 import ERC20ABI from 'uniswap/src/abis/erc20.json'
 import { Erc20Interface } from 'uniswap/src/abis/types/Erc20'
+import { UniverseChainId } from 'uniswap/src/types/chains'
 import { isAddress } from 'utilities/src/addresses'
 import { currencyKey } from 'utils/currencyKey'
 
@@ -33,12 +34,17 @@ function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefined)[]):
     [uncheckedAddresses],
   )
 
+  console.log('validAddressInputs', validAddressInputs, 'chainId', chainId, 'multicallContract', multicallContract)
+
   const results = useSingleContractMultipleData(multicallContract, 'getEthBalance', validAddressInputs)
+
+  console.log('results', results)
 
   return useMemo(
     () =>
       validAddressInputs.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, [address], i) => {
         const value = results?.[i]?.result?.[0]
+        console.log('value', value, 'chainId', chainId)
         if (value && chainId) {
           memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
         }
@@ -108,15 +114,32 @@ function useRpcCurrencyBalances(
   account?: string,
   currencies?: (Currency | undefined)[],
 ): (CurrencyAmount<Currency> | undefined)[] {
+  console.log('currencies', currencies)
   const tokens = useMemo(
     () => currencies?.filter((currency): currency is Token => currency?.isToken ?? false) ?? [],
     [currencies],
   )
 
   const { chainId } = useAccount()
+  console.log('tokens', tokens)
   const tokenBalances = useRpcTokenBalances(account, tokens)
+  console.log('tokenBalances', tokenBalances)
   const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
-  const ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
+  console.log('containsETH', containsETH)
+  let ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
+  console.log('ethBalance', ethBalance)
+
+  currencies = currencies?.map((currency) => {
+    if (currency?.chainId === UniverseChainId.Helder) {
+      ethBalance = {
+        [account!]: CurrencyAmount.fromRawAmount(
+          nativeOnChain(UniverseChainId.Helder),
+          JSBI.BigInt('1000000000000000000000'),
+        ),
+      }
+    }
+    return currency
+  })
 
   return useMemo(
     () =>

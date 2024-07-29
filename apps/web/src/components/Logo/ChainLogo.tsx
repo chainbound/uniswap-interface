@@ -24,6 +24,7 @@ export function getChainUI(chainId: InterfaceChainId, darkMode: boolean): ChainU
     case UniverseChainId.Mainnet:
     case UniverseChainId.Goerli:
     case UniverseChainId.Sepolia:
+    case UniverseChainId.Helder:
       return {
         symbol: ETHEREUM_LOGO,
         bgColor: '#6B8AFF33',

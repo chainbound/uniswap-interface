@@ -22,7 +22,7 @@ export const BRIDGED_BASE_ADDRESSES = [
 ]
 
 export function getNativeAddress(chainId: WalletChainId): string {
-  return UNIVERSE_CHAIN_INFO[chainId].nativeCurrency.address
+  return UNIVERSE_CHAIN_INFO[chainId].nativeCurrency.address || ''
 }
 
 export function getWrappedNativeAddress(chainId: WalletChainId): string {

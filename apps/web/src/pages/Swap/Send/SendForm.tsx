@@ -28,9 +28,11 @@ type SendFormProps = {
 }
 
 function useSendButtonState() {
+  console.log('inside useSendButtonState')
   const { sendState, derivedSendInfo } = useSendContext()
   const { recipient } = sendState
   const { parsedTokenAmount, recipientData } = derivedSendInfo
+  console.log('derivedSendInfo', derivedSendInfo)
 
   return useMemo(() => {
     if (recipient && !recipientData) {
@@ -40,12 +42,14 @@ function useSendButtonState() {
       }
     }
 
-    if (!parsedTokenAmount) {
-      return {
-        label: <Trans i18nKey="common.amountInput.placeholder" />,
-        disabled: true,
-      }
-    }
+    console.log('parsedTokenAmount', parsedTokenAmount)
+
+    // if (!parsedTokenAmount) {
+    //   return {
+    //     label: <Trans i18nKey="common.amountInput.placeholder" />,
+    //     disabled: true,
+    //   }
+    // }
 
     if (!recipient && !recipientData) {
       return {
@@ -170,6 +174,7 @@ function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFor
   )
 
   const handleSend = useCallback(() => {
+    console.log('inside handlesend')
     sendCallback()
       .then(() => {
         handleModalState(SendFormModalState.None)
@@ -182,7 +187,9 @@ function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFor
           inputInFiat: true,
         }))
       })
-      .catch(() => undefined)
+      .catch((e) => {
+        console.error('error in sendCallback', e)
+      })
   }, [handleModalState, sendCallback, setSendState])
 
   return (

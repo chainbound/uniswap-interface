@@ -97,6 +97,10 @@ export const COMMON_BASES: ChainCurrencyList = {
     nativeOnChain(UniverseChainId.Sepolia),
     WRAPPED_NATIVE_CURRENCY[UniverseChainId.Sepolia] as Token,
   ].map(buildCurrencyInfo),
+  [UniverseChainId.Helder]: [
+    nativeOnChain(UniverseChainId.Helder),
+    WRAPPED_NATIVE_CURRENCY[UniverseChainId.Helder] as Token,
+  ].map(buildCurrencyInfo),
   [UniverseChainId.ArbitrumOne]: [
     nativeOnChain(UniverseChainId.ArbitrumOne),
     ARB,
