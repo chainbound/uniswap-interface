@@ -52,3 +52,6 @@ Translations for our applications are done through [crowdin](https://crowdin.com
 | `apps/`     | The home for each standalone application.                                      |
 | `config/`   | Shared infrastructure packages and configurations.                             |
 | `packages/` | Shared code packages covering UI, shared functionality, and shared utilities.  |
+
+## Running the interface locally
+See the README in the `apps/web` directory for instructions on how to run the interface locally.
