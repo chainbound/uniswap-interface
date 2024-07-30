@@ -30,6 +30,8 @@
     "blob:",
     "data:",
     "https://*.helder-devnets.xyz",
+    "https://*.chainbound.io",
+    "https://*.herokuapp.com",
     "http://135.181.191.125:8015",
     "https://*.alchemy.com",
     "https://*.arbitrum.io",

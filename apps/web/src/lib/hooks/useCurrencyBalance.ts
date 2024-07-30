@@ -10,8 +10,11 @@ import { useMemo } from 'react'
 import ERC20ABI from 'uniswap/src/abis/erc20.json'
 import { Erc20Interface } from 'uniswap/src/abis/types/Erc20'
 import { UniverseChainId } from 'uniswap/src/types/chains'
+import { useAsyncMemo } from 'use-async-memo'
 import { isAddress } from 'utilities/src/addresses'
 import { currencyKey } from 'utils/currencyKey'
+
+let ethBalanceBoltRpc = '0'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
@@ -26,25 +29,20 @@ function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefined)[]):
     () =>
       uncheckedAddresses
         ? uncheckedAddresses
-            .map(isAddress)
-            .filter((a): a is string => a !== false)
-            .sort()
-            .map((addr) => [addr])
+          .map(isAddress)
+          .filter((a): a is string => a !== false)
+          .sort()
+          .map((addr) => [addr])
         : [],
     [uncheckedAddresses],
   )
 
-  console.log('validAddressInputs', validAddressInputs, 'chainId', chainId, 'multicallContract', multicallContract)
-
   const results = useSingleContractMultipleData(multicallContract, 'getEthBalance', validAddressInputs)
-
-  console.log('results', results)
 
   return useMemo(
     () =>
       validAddressInputs.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, [address], i) => {
         const value = results?.[i]?.result?.[0]
-        console.log('value', value, 'chainId', chainId)
         if (value && chainId) {
           memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
         }
@@ -89,13 +87,13 @@ export function useRpcTokenBalancesWithLoadingIndicator(
     () => [
       address && validatedTokens.length > 0
         ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
-            const value = balances?.[i]?.result?.[0]
-            const amount = value ? JSBI.BigInt(value.toString()) : undefined
-            if (amount) {
-              memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
-            }
-            return memo
-          }, {})
+          const value = balances?.[i]?.result?.[0]
+          const amount = value ? JSBI.BigInt(value.toString()) : undefined
+          if (amount) {
+            memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+          }
+          return memo
+        }, {})
         : {},
       anyLoading,
     ],
@@ -114,28 +112,47 @@ function useRpcCurrencyBalances(
   account?: string,
   currencies?: (Currency | undefined)[],
 ): (CurrencyAmount<Currency> | undefined)[] {
-  console.log('currencies', currencies)
   const tokens = useMemo(
     () => currencies?.filter((currency): currency is Token => currency?.isToken ?? false) ?? [],
     [currencies],
   )
 
   const { chainId } = useAccount()
-  console.log('tokens', tokens)
   const tokenBalances = useRpcTokenBalances(account, tokens)
-  console.log('tokenBalances', tokenBalances)
   const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
-  console.log('containsETH', containsETH)
   let ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
-  console.log('ethBalance', ethBalance)
+
+  // Fetch ETH balance from Bolt RPC, and update ethBalance accordingly
+  // only if it is different from 0
+  useAsyncMemo(async () => {
+    if (!account)
+      return
+    const boltRpcUrl = 'https://bolt.chainbound.io/rpc'
+    const body = JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_getBalance',
+      params: [account, 'latest'],
+      id: 1,
+    });
+    const balance = await fetch(boltRpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body,
+    })
+      .then((response) => response.json())
+      .then((data: { result: string }) => {
+        return data.result
+      })
+      .catch((error) => { console.error('error while fetching balance from Bolt RPC', error); return '0' })
+    ethBalanceBoltRpc = balance
+  }, [account])
 
   currencies = currencies?.map((currency) => {
     if (currency?.chainId === UniverseChainId.Helder) {
       ethBalance = {
-        [account!]: CurrencyAmount.fromRawAmount(
-          nativeOnChain(UniverseChainId.Helder),
-          JSBI.BigInt('1000000000000000000000'),
-        ),
+        [account!]: CurrencyAmount.fromRawAmount(nativeOnChain(UniverseChainId.Helder), JSBI.BigInt(ethBalanceBoltRpc)),
       }
     }
     return currency
