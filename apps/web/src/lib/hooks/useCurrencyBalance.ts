@@ -147,7 +147,7 @@ function useRpcCurrencyBalances(
       })
       .catch((error) => { console.error('error while fetching balance from Bolt RPC', error); return '0' })
     ethBalanceBoltRpc = balance
-  }, [account])
+  }, [])
 
   currencies = currencies?.map((currency) => {
     if (currency?.chainId === UniverseChainId.Helder) {
