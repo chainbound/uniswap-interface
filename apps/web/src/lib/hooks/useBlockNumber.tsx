@@ -8,10 +8,10 @@ import { UniverseChainId } from 'uniswap/src/types/chains'
 const MISSING_PROVIDER = Symbol()
 export const BlockNumberContext = createContext<
   | {
-      fastForward(block: number): void
-      block?: number
-      mainnetBlock?: number
-    }
+    fastForward(block: number): void
+    block?: number
+    mainnetBlock?: number
+  }
   | typeof MISSING_PROVIDER
 >(MISSING_PROVIDER)
 
@@ -75,7 +75,7 @@ export function BlockNumberProvider({ children }: PropsWithChildren) {
       })
 
       const onBlock = (block: number) => onChainBlock(account.chainId, block)
-      provider.on('block', onBlock)
+      // provider.on('block', onBlock) NOTE: we don't strictly need this for the demo (needed for Mainnet block number) and it is causing a lot of error logs
       return () => {
         provider.removeListener('block', onBlock)
       }
