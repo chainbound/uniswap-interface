@@ -28,11 +28,9 @@ type SendFormProps = {
 }
 
 function useSendButtonState() {
-  console.log('inside useSendButtonState')
   const { sendState, derivedSendInfo } = useSendContext()
   const { recipient } = sendState
   const { parsedTokenAmount, recipientData } = derivedSendInfo
-  console.log('derivedSendInfo', derivedSendInfo)
 
   return useMemo(() => {
     if (recipient && !recipientData) {
@@ -41,8 +39,6 @@ function useSendButtonState() {
         disabled: true,
       }
     }
-
-    console.log('parsedTokenAmount', parsedTokenAmount)
 
     // if (!parsedTokenAmount) {
     //   return {

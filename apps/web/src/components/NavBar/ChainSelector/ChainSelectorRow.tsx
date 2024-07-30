@@ -69,8 +69,6 @@ export default function ChainSelectorRow({ disabled, targetChain, onSelectChain,
   const chainInfo = getChain({ chainId: supportedChain })
   const label = chainInfo?.label
 
-  console.log('inside chain selector row')
-
   return (
     <Trace logPress section={SectionName.ChainSelector} element={chainInfo?.elementName}>
       <Container

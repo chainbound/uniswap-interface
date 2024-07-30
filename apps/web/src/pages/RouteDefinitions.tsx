@@ -197,11 +197,11 @@ export const routes: RouteDefinition[] = [
     getElement: () => <Swap />,
     getTitle: () => StaticTitlesAndDescriptions.SwapTitle,
   }),
-  createRouteDefinition({
-    path: '/swap',
-    getElement: () => <Swap />,
-    getTitle: () => StaticTitlesAndDescriptions.SwapTitle,
-  }),
+  // createRouteDefinition({
+  //   path: '/swap',
+  //   getElement: () => <Swap />,
+  //   getTitle: () => StaticTitlesAndDescriptions.SwapTitle,
+  // }),
   createRouteDefinition({
     path: '/pool/v2/find',
     getElement: () => <PoolFinder />,
