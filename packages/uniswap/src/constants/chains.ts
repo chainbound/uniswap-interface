@@ -312,12 +312,12 @@ export const UNIVERSE_CHAIN_INFO: Record<UniverseChainId, UniverseChainInfo> = {
     pendingTransactionsRetryOptions: undefined,
     rpcUrls: {
       default: {
-        http: ['bolt.chainbound.io/rpc'], // http://135.181.191.125:8015/rpc
+        http: ['https://bolt.chainbound.io/rpc'], // http://135.181.191.125:8015/rpc
       },
       fallback: {
-        http: ['bolt.chainbound.io/rpc'],
+        http: ['https://bolt.chainbound.io/rpc'],
       },
-      appOnly: { http: [`bolt.chainbound.io/rpc`] },
+      appOnly: { http: [`https://bolt.chainbound.io/rpc`] },
     },
     spotPriceStablecoinAmount: CurrencyAmount.fromRawAmount(USDC_SEPOLIA, 10_000e6),
     stablecoins: [],
