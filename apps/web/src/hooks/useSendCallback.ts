@@ -8,10 +8,12 @@ import { useEthersProvider } from 'hooks/useEthersProvider'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { GasFeeResult } from 'hooks/useTransactionGasFee'
 import { toHexPrefixed } from 'lib/utils/hex'
+import { useShowPreconfirmed } from 'pages/Swap'
 import { useCallback } from 'react'
 import { useTransactionAdder } from 'state/transactions/hooks'
 import { trace } from 'tracing/trace'
 import { UniverseChainId } from 'uniswap/src/types/chains'
+import { sleep } from 'utilities/src/time/timing'
 import { UserRejectedRequestError, toReadableError } from 'utils/errors'
 import { didUserReject } from 'utils/swapErrorToUserReadableMessage'
 import { hexToBytes } from 'viem'
@@ -32,6 +34,7 @@ export function useSendCallback({
   const addTransaction = useTransactionAdder()
   const switchChain = useSwitchChain()
   const supportedTransactionChainId = useSupportedChainId(transactionRequest?.chainId)
+  const { setShowPreconfirmedSlot: setShowPreconfirmed } = useShowPreconfirmed()
 
   return useCallback(
     () =>
@@ -91,7 +94,7 @@ export function useSendCallback({
 
                 txReq = EthereumJS.FeeMarketEIP1559Transaction.fromTxData({
                   ...txReq,
-                  v: 0,
+                  v: sigSplitted.recoveryParam,
                   r: sigSplitted.r,
                   s: sigSplitted.s,
                 })
@@ -103,9 +106,24 @@ export function useSendCallback({
                   return
                 }
 
-                const hash: string = await provider?.send('eth_sendRawTransaction', [rawTransaction])
-                console.log('tx hash', hash)
-                return hash
+                type SidecarResponse = { slot: number; txs: string[]; signature: string }
+                const rpcResponse = (await fetch('https://bolt.chainbound.io/rpc', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'eth_sendRawTransaction',
+                    params: [rawTransaction],
+                    id: 1,
+                  }),
+                })
+                  .then((response) => response.json())
+                  .then((res) => res.result)
+                  .catch((error) => console.error(error))) as SidecarResponse | undefined
+
+                return rpcResponse
               } catch (error) {
                 if (didUserReject(error)) {
                   walletTrace.setStatus('cancelled')
@@ -116,14 +134,25 @@ export function useSendCallback({
               }
             },
           )
-          console.log('response', response)
-          // const sendInfo: SendTransactionInfo = {
-          //   type: TransactionType.SEND,
-          //   currencyId: currencyId(currencyAmount!.currency),
-          //   amount: currencyAmount!.quotient.toString(),
-          //   recipient: recipient!,
-          // }
-          // addTransaction(response, sendInfo)
+
+          console.log('response from sidecar', response)
+
+          if (!response?.txs) {
+            throw new Error('No tx hash returned')
+          }
+
+          const rawPreconfirmed = hexToBytes(response.txs[0] as any)
+          const txHash = keccak256(rawPreconfirmed)
+          console.log('txHash', txHash)
+
+          sleep(500).then(() => {
+            setShowPreconfirmed(1234)
+          })
+          console.log('setShowPreconfirmed', true)
+          sleep(5000).then(() => {
+            console.log('setShowPreconfirmed')
+            setShowPreconfirmed(undefined)
+          })
         } catch (error) {
           if (error instanceof UserRejectedRequestError) {
             trace.setStatus('cancelled')

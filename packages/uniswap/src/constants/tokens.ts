@@ -23,12 +23,12 @@ export const USDC_SEPOLIA = new Token(
   'USDC',
   'USD//C',
 )
-export const USDC_HELDER = new Token(
+export const DAI_HELDER = new Token(
   UniverseChainId.Helder,
-  '0x6f14C02Fc1F78322cFd7d707aB90f18baD3B54f5',
+  '0x00008F75186d668fa56C4d16458141D982016dE1',
   6,
-  'USDC',
-  'USD//C',
+  'DAI',
+  'Dai Stablecoin',
 )
 
 export const DAI = new Token(

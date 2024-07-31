@@ -1,5 +1,6 @@
 import { InterfacePageName } from '@uniswap/analytics-events'
 import { Currency } from '@uniswap/sdk-core'
+import { PopupContainer } from 'components/Banner/shared/styled'
 import { NetworkAlert } from 'components/NetworkAlert/NetworkAlert'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import SwapHeader from 'components/swap/SwapHeader'
@@ -10,7 +11,7 @@ import { useAccount } from 'hooks/useAccount'
 import { BuyForm } from 'pages/Swap/Buy/BuyForm'
 import { LimitFormWrapper } from 'pages/Swap/Limit/LimitForm'
 import { SendForm } from 'pages/Swap/Send/SendForm'
-import { ReactNode } from 'react'
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { InterfaceTrade, TradeState } from 'state/routing/types'
 import { isPreviewTrade } from 'state/routing/utils'
@@ -67,6 +68,20 @@ export default function SwapPage({ className }: { className?: string }) {
   )
 }
 
+const ShowPreconfirmedContext = createContext<
+  { showPreconfirmedSlot: number | undefined, setShowPreconfirmedSlot: Dispatch<SetStateAction<number | undefined>> }
+>({ showPreconfirmedSlot: undefined, setShowPreconfirmedSlot: () => null });
+export const PreconfirmedProvider = ({ children }: any) => {
+  const [showPreconfirmedSlot, setShowPreconfirmedSlot] = useState<number | undefined>();
+
+  return (
+    <ShowPreconfirmedContext.Provider value={{ showPreconfirmedSlot, setShowPreconfirmedSlot }}>
+      {children}
+    </ShowPreconfirmedContext.Provider>
+  );
+};
+export const useShowPreconfirmed = () => useContext(ShowPreconfirmedContext);
+
 /**
  * The swap component displays the swap interface, manages state for the swap, and triggers onchain swaps.
  *
@@ -100,30 +115,62 @@ export function Swap({
   const forAggregatorEnabled = useFeatureFlag(FeatureFlags.ForAggregatorWeb)
 
   return (
-    <SwapAndLimitContextProvider
-      initialChainId={chainId}
-      initialInputCurrency={initialInputCurrency}
-      initialOutputCurrency={initialOutputCurrency}
-      multichainUXEnabled={multichainUXEnabled}
-    >
-      {/* TODO: Move SwapContextProvider inside Swap tab ONLY after SwapHeader removes references to trade / autoSlippage */}
-      <SwapAndLimitContext.Consumer>
-        {({ currentTab }) => (
-          <SwapContextProvider multichainUXEnabled={multichainUXEnabled}>
-            <Flex width="100%">
-              <SwapWrapper isDark={isDark} className={className} id="swap-page">
-                <SwapHeader compact={compact || !screenSize.sm} syncTabToUrl={syncTabToUrl} />
-                {currentTab === SwapTab.Limit && <LimitFormWrapper onCurrencyChange={onCurrencyChange} />}
-                {currentTab === SwapTab.Send && (
-                  <SendForm disableTokenInputs={disableTokenInputs} onCurrencyChange={onCurrencyChange} />
-                )}
-                {currentTab === SwapTab.Buy && forAggregatorEnabled && <BuyForm disabled={disableTokenInputs} />}
-              </SwapWrapper>
-              <NetworkAlert />
-            </Flex>
-          </SwapContextProvider>
-        )}
-      </SwapAndLimitContext.Consumer>
-    </SwapAndLimitContextProvider>
+    <PreconfirmedProvider>
+
+      <ShowPreconfirmedComponent />
+
+      <SwapAndLimitContextProvider
+        initialChainId={chainId}
+        initialInputCurrency={initialInputCurrency}
+        initialOutputCurrency={initialOutputCurrency}
+        multichainUXEnabled={multichainUXEnabled}
+      >
+        {/* TODO: Move SwapContextProvider inside Swap tab ONLY after SwapHeader removes references to trade / autoSlippage */}
+        <SwapAndLimitContext.Consumer>
+          {({ currentTab }) => (
+            <SwapContextProvider multichainUXEnabled={multichainUXEnabled}>
+              <Flex width="100%">
+                <SwapWrapper isDark={isDark} className={className} id="swap-page">
+                  <SwapHeader compact={compact || !screenSize.sm} syncTabToUrl={syncTabToUrl} />
+                  {currentTab === SwapTab.Limit && <LimitFormWrapper onCurrencyChange={onCurrencyChange} />}
+                  {currentTab === SwapTab.Send && (
+                    <SendForm disableTokenInputs={disableTokenInputs} onCurrencyChange={onCurrencyChange} />
+                  )}
+                  {currentTab === SwapTab.Buy && forAggregatorEnabled && <BuyForm disabled={disableTokenInputs} />}
+                </SwapWrapper>
+                <NetworkAlert />
+              </Flex>
+            </SwapContextProvider>
+          )}
+        </SwapAndLimitContext.Consumer>
+      </SwapAndLimitContextProvider>
+    </PreconfirmedProvider>
+  )
+}
+
+function ShowPreconfirmedComponent() {
+  const { showPreconfirmedSlot } = useShowPreconfirmed();
+  console.log("showPreconfirmed in component", showPreconfirmedSlot);
+
+  return (
+    <div style={{ display: showPreconfirmedSlot ? 'block' : 'none' }}>
+      <div style={{
+        width: '100%', position: "fixed", top: '90px',
+        right: "15px", display: 'flex', justifyContent: 'end', zIndex: 999
+      }}>
+        <PopupContainer show>
+          <div style={{
+            display: 'flex', marginTop: '-12px', flexDirection: 'column', paddingBottom: '4px',
+            gap: '8px', lineHeight: 0, justifyContent: 'center', alignItems: 'center'
+          }}>
+            <p style={{ fontWeight: '500' }}>Transaction preconfirmed ✨</p>
+            <a style={{
+              cursor: 'pointer', fontSize: 'small', color: '#FC72FF',
+              textDecoration: 'underline', fontWeight: '400'
+            }} href={`https://dora.helder-devnets.xyz/slot/${showPreconfirmedSlot}`} target='_blank'>Will be included soon™️</a>
+          </div>
+        </PopupContainer>
+      </div >
+    </div>
   )
 }

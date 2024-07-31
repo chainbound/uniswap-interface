@@ -21,6 +21,7 @@ import { UNIVERSE_CHAIN_INFO } from 'uniswap/src/constants/chains'
 import Trace from 'uniswap/src/features/telemetry/Trace'
 import { InterfacePageNameLocal } from 'uniswap/src/features/telemetry/constants'
 import { useIsSmartContractAddress } from 'utils/transfer'
+import { useShowPreconfirmed } from '..'
 
 type SendFormProps = {
   onCurrencyChange?: (selected: CurrencyState) => void
@@ -76,6 +77,7 @@ enum SendSpeedBump {
 function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFormProps) {
   const account = useAccount()
   const selectChain = useSelectChain()
+  const { showPreconfirmedSlot: showPreconfirmed, setShowPreconfirmedSlot: setShowPreconfirmed } = useShowPreconfirmed()
 
   const accountDrawer = useAccountDrawer()
 
@@ -170,7 +172,6 @@ function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFor
   )
 
   const handleSend = useCallback(() => {
-    console.log('inside handlesend')
     sendCallback()
       .then(() => {
         handleModalState(SendFormModalState.None)
