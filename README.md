@@ -55,3 +55,10 @@ Translations for our applications are done through [crowdin](https://crowdin.com
 
 ## Running the interface locally
 See the README in the `apps/web` directory for instructions on how to run the interface locally.
+
+## Sending Preconfirmations from this demo
+This demo is a work-in-progress, and as of now the quickest way we've found to enable sending preconfirmantions
+from a wallet like MetaMask is by enabling the `eth_sign` method in the "advanced" settings of MetaMask.
+
+Metamask will warn you every time you're signing something with this method, but be sure to disable it when you're done testing.
+It is also highly recommended to just use this method for the Helder Testnet and not in any production environment.
