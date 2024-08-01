@@ -156,16 +156,19 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
         </Popover.Trigger>
         <NavDropdown width={240} isOpen={isOpen}>
           <ChainsDropdownWrapper>
-            {supportedChains.map((selectorChain) => (
-              <ChainSelectorRow
-                disabled={!walletSupportsChain.includes(selectorChain)}
-                onSelectChain={onSelectChain}
-                targetChain={selectorChain}
-                key={selectorChain}
-                isPending={selectorChain === pendingChainId}
-              />
-            ))}
-            {unsupportedChains.map((selectorChain) => (
+            {supportedChains.map(
+              (selectorChain) =>
+                (selectorChain === UniverseChainId.Helder || selectorChain === UniverseChainId.Mainnet) && (
+                  <ChainSelectorRow
+                    disabled={!walletSupportsChain.includes(selectorChain)}
+                    onSelectChain={onSelectChain}
+                    targetChain={selectorChain}
+                    key={selectorChain}
+                    isPending={selectorChain === pendingChainId}
+                  />
+                ),
+            )}
+            {/* {unsupportedChains.map((selectorChain) => (
               <ChainSelectorRow
                 disabled
                 onSelectChain={() => undefined}
@@ -173,7 +176,7 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
                 key={selectorChain}
                 isPending={false}
               />
-            ))}
+            ))} */}
           </ChainsDropdownWrapper>
         </NavDropdown>
       </Popover>

@@ -6,11 +6,11 @@ import { Z_INDEX } from 'theme/zIndex'
 
 export const PopupContainer = styled.div<{ show: boolean }>`
   ${({ show }) => !show && 'display: none'};
-  background-color: ${({ theme }) => theme.surface2};
+  background-color: ${({ theme }) => theme.accent2};
   color: ${({ theme }) => theme.neutral1};
   z-index: ${Z_INDEX.sticky};
   right: 2px;
-  width: 300px;
+  width: 330px;
   display: grid;
   place-items: center;
   padding: 16px;

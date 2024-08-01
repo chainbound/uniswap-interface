@@ -12,7 +12,6 @@ import { Pair, Route as V2Route } from '@uniswap/v2-sdk'
 import { FeeAmount, Pool, Route as V3Route } from '@uniswap/v3-sdk'
 import { BIPS_BASE } from 'constants/misc'
 import { isAvalanche, isBsc, isPolygon, nativeOnChain } from 'constants/tokens'
-import { getApproveInfo, getWrapInfo } from 'state/routing/gas'
 import {
   ClassicQuoteData,
   ClassicTrade,
@@ -27,7 +26,6 @@ import {
   QuickRouteResponse,
   QuoteMethod,
   QuoteState,
-  RouterPreference,
   SubmittableTrade,
   SwapFeeInfo,
   SwapRouterNativeAssets,
@@ -44,7 +42,6 @@ import {
   isClassicQuoteResponse,
 } from 'state/routing/types'
 import { logger } from 'utilities/src/logger/logger'
-import { toSlippagePercent } from 'utils/slippage'
 
 interface RouteResult {
   routev3: V3Route<Currency, Currency> | null
@@ -80,8 +77,8 @@ export function computeRoutes(args: GetQuoteArgs, routes: ClassicQuoteData['rout
       const isOnlyV3 = isVersionedRoute<V3PoolInRoute>(PoolType.V3Pool, route)
 
       return {
-        routev3: isOnlyV3 ? new V3Route(route.map(parsePool), currencyIn, currencyOut) : null,
-        routev2: isOnlyV2 ? new V2Route(route.map(parsePair), currencyIn, currencyOut) : null,
+        routev3: null,
+        routev2: null,
         mixedRoute:
           !isOnlyV3 && !isOnlyV2 ? new MixedRouteSDK(route.map(parsePoolOrPair), currencyIn, currencyOut) : null,
         inputAmount: CurrencyAmount.fromRawAmount(currencyIn, rawAmountIn),
@@ -261,113 +258,117 @@ export async function transformQuoteToTrade(
   data: URAQuoteResponse,
   quoteMethod: QuoteMethod,
 ): Promise<TradeResult> {
-  const { tradeType, needsWrapIfUniswapX, isXv2, routerPreference, account, amount } = args
-
-  const showUniswapXTrade =
-    (isXv2 ? data.routing === URAQuoteType.DUTCH_V2 : data.routing === URAQuoteType.DUTCH_V1) &&
-    routerPreference === RouterPreference.X
-
-  const [currencyIn, currencyOut] = getTradeCurrencies(args, showUniswapXTrade)
-
-  const { gasUseEstimateUSD, blockNumber, routes, gasUseEstimate, swapFee } = getClassicTradeDetails(args, data)
-
-  const usdCostPerGas = getUSDCostPerGas(gasUseEstimateUSD, gasUseEstimate)
-
-  const approveInfo = await getApproveInfo(account, currencyIn, amount, usdCostPerGas)
-
-  const classicTrade = new ClassicTrade({
-    v2Routes:
-      routes
-        ?.filter((r): r is RouteResult & { routev2: NonNullable<RouteResult['routev2']> } => r.routev2 !== null)
-        .map(({ routev2, inputAmount, outputAmount }) => ({
-          routev2,
-          inputAmount,
-          outputAmount,
-        })) ?? [],
-    v3Routes:
-      routes
-        ?.filter((r): r is RouteResult & { routev3: NonNullable<RouteResult['routev3']> } => r.routev3 !== null)
-        .map(({ routev3, inputAmount, outputAmount }) => ({
-          routev3,
-          inputAmount,
-          outputAmount,
-        })) ?? [],
-    mixedRoutes:
-      routes
-        ?.filter(
-          (r): r is RouteResult & { mixedRoute: NonNullable<RouteResult['mixedRoute']> } => r.mixedRoute !== null,
-        )
-        .map(({ mixedRoute, inputAmount, outputAmount }) => ({
-          mixedRoute,
-          inputAmount,
-          outputAmount,
-        })) ?? [],
-    tradeType,
-    gasUseEstimateUSD,
-    gasUseEstimate,
-    approveInfo,
-    blockNumber,
-    requestId: data.quote.requestId,
-    quoteMethod,
-    swapFee,
-  })
-
-  // If the top-level URA quote type is DUTCH_V1 or DUTCH_V2, then UniswapX is better for the user
-  const isUniswapXBetter = data.routing === URAQuoteType.DUTCH_V1 || data.routing === URAQuoteType.DUTCH_V2
-  if (isUniswapXBetter) {
-    const swapFee = getSwapFee(data.quote)
-    const wrapInfo = await getWrapInfo(needsWrapIfUniswapX, account, currencyIn.chainId, amount, usdCostPerGas)
-
-    if (data.routing === URAQuoteType.DUTCH_V2) {
-      const orderInfo = toUnsignedV2DutchOrderInfo(data.quote.orderInfo)
-      const uniswapXv2Trade = new V2DutchOrderTrade({
-        currencyIn,
-        currenciesOut: [currencyOut],
-        orderInfo,
-        tradeType,
-        quoteId: data.quote.quoteId,
-        requestId: data.quote.requestId,
-        classicGasUseEstimateUSD: classicTrade.totalGasUseEstimateUSD,
-        wrapInfo,
-        approveInfo,
-        deadlineBufferSecs: data.quote.deadlineBufferSecs,
-        slippageTolerance: toSlippagePercent(data.quote.slippageTolerance),
-        swapFee,
-        forceOpenOrder: args.isXv2Arbitrum,
-      })
-
-      return {
-        state: QuoteState.SUCCESS,
-        trade: uniswapXv2Trade,
-      }
-    } else if (data.routing === URAQuoteType.DUTCH_V1) {
-      const orderInfo = toDutchOrderInfo(data.quote.orderInfo)
-      const uniswapXTrade = new DutchOrderTrade({
-        currencyIn,
-        currenciesOut: [currencyOut],
-        orderInfo,
-        tradeType,
-        quoteId: data.quote.quoteId,
-        requestId: data.quote.requestId,
-        classicGasUseEstimateUSD: classicTrade.totalGasUseEstimateUSD,
-        wrapInfo,
-        approveInfo,
-        auctionPeriodSecs: data.quote.auctionPeriodSecs,
-        startTimeBufferSecs: data.quote.startTimeBufferSecs,
-        deadlineBufferSecs: data.quote.deadlineBufferSecs,
-        slippageTolerance: toSlippagePercent(data.quote.slippageTolerance),
-        swapFee,
-      })
-
-      return {
-        state: QuoteState.SUCCESS,
-        trade: uniswapXTrade,
-      }
-    }
+  return {
+    state: QuoteState.NOT_FOUND,
+    trade: undefined,
+    latencyMs: 0,
   }
-
-  return { state: QuoteState.SUCCESS, trade: classicTrade }
 }
+
+// const { tradeType, needsWrapIfUniswapX, isXv2, routerPreference, account, amount } = args
+
+// const showUniswapXTrade =
+//   (isXv2 ? data.routing === URAQuoteType.DUTCH_V2 : data.routing === URAQuoteType.DUTCH_V1) &&
+//   routerPreference === RouterPreference.X
+
+// const [currencyIn, currencyOut] = getTradeCurrencies(args, showUniswapXTrade)
+
+// const { gasUseEstimateUSD, blockNumber, routes, gasUseEstimate, swapFee } = getClassicTradeDetails(args, data)
+
+// const usdCostPerGas = getUSDCostPerGas(gasUseEstimateUSD, gasUseEstimate)
+
+// const approveInfo = await getApproveInfo(account, currencyIn, amount, usdCostPerGas)
+
+// const classicTrade = new ClassicTrade({
+//   v2Routes:
+//     routes
+//       ?.filter((r): r is RouteResult & { routev2: NonNullable<RouteResult['routev2']> } => r.routev2 !== null)
+//       .map(({ routev2, inputAmount, outputAmount }) => ({
+//         routev2,
+//         inputAmount,
+//         outputAmount,
+//       })) ?? [],
+//   v3Routes:
+//     routes
+//       ?.filter((r): r is RouteResult & { routev3: NonNullable<RouteResult['routev3']> } => r.routev3 !== null)
+//       .map(({ routev3, inputAmount, outputAmount }) => ({
+//         routev3,
+//         inputAmount,
+//         outputAmount,
+//       })) ?? [],
+//   mixedRoutes:
+//     routes
+//       ?.filter(
+//         (r): r is RouteResult & { mixedRoute: NonNullable<RouteResult['mixedRoute']> } => r.mixedRoute !== null,
+//       )
+//       .map(({ mixedRoute, inputAmount, outputAmount }) => ({
+//         mixedRoute,
+//         inputAmount,
+//         outputAmount,
+//       })) ?? [],
+//   tradeType,
+//   gasUseEstimateUSD,
+//   gasUseEstimate,
+//   approveInfo,
+//   blockNumber,
+//   requestId: data.quote.requestId,
+//   quoteMethod,
+//   swapFee,
+// })
+
+// // If the top-level URA quote type is DUTCH_V1 or DUTCH_V2, then UniswapX is better for the user
+// const isUniswapXBetter = data.routing === URAQuoteType.DUTCH_V1 || data.routing === URAQuoteType.DUTCH_V2
+// if (isUniswapXBetter) {
+//   const swapFee = getSwapFee(data.quote)
+//   const wrapInfo = await getWrapInfo(needsWrapIfUniswapX, account, currencyIn.chainId, amount, usdCostPerGas)
+
+// if (data.routing === URAQuoteType.DUTCH_V2) {
+//   const orderInfo = toUnsignedV2DutchOrderInfo(data.quote.orderInfo)
+//   const uniswapXv2Trade = new V2DutchOrderTrade({
+//     currencyIn,
+//     currenciesOut: [currencyOut],
+//     orderInfo,
+//     tradeType,
+//     quoteId: data.quote.quoteId,
+//     requestId: data.quote.requestId,
+//     classicGasUseEstimateUSD: classicTrade.totalGasUseEstimateUSD,
+//     wrapInfo,
+//     approveInfo,
+//     deadlineBufferSecs: data.quote.deadlineBufferSecs,
+//     slippageTolerance: toSlippagePercent(data.quote.slippageTolerance),
+//     swapFee,
+//     forceOpenOrder: args.isXv2Arbitrum,
+//   })
+
+//   return {
+//     state: QuoteState.SUCCESS,
+//     trade: uniswapXv2Trade,
+//   }
+// } else if (data.routing === URAQuoteType.DUTCH_V1) {
+//   const orderInfo = toDutchOrderInfo(data.quote.orderInfo)
+//   const uniswapXTrade = new DutchOrderTrade({
+//     currencyIn,
+//     currenciesOut: [currencyOut],
+//     orderInfo,
+//     tradeType,
+//     quoteId: data.quote.quoteId,
+//     requestId: data.quote.requestId,
+//     classicGasUseEstimateUSD: classicTrade.totalGasUseEstimateUSD,
+//     wrapInfo,
+//     approveInfo,
+//     auctionPeriodSecs: data.quote.auctionPeriodSecs,
+//     startTimeBufferSecs: data.quote.startTimeBufferSecs,
+//     deadlineBufferSecs: data.quote.deadlineBufferSecs,
+//     slippageTolerance: toSlippagePercent(data.quote.slippageTolerance),
+//     swapFee,
+//   })
+
+// return {
+//   state: QuoteState.SUCCESS,
+//   trade: uniswapXTrade,
+// }
+//   }
+// }
 
 function parseToken({ address, chainId, decimals, symbol, buyFeeBps, sellFeeBps }: TokenInRoute): Token {
   const buyFeeBpsBN = buyFeeBps ? BigNumber.from(buyFeeBps) : undefined

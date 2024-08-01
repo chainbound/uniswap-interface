@@ -276,7 +276,7 @@ export const UNIVERSE_CHAIN_INFO: Record<UniverseChainId, UniverseChainInfo> = {
   } as const satisfies UniverseChainInfo,
   [UniverseChainId.Helder]: {
     id: UniverseChainId.Helder as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    name: 'Helder',
+    name: 'Helder Testnet',
     sdkId: UniswapSDKChainId.SEPOLIA,
     assetRepoNetworkName: undefined,
     backendChain: {
@@ -300,7 +300,7 @@ export const UNIVERSE_CHAIN_INFO: Record<UniverseChainId, UniverseChainInfo> = {
     infoLink: 'https://app.uniswap.org/explore',
     infuraPrefix: 'helder',
     interfaceName: 'helder',
-    label: 'Helder',
+    label: 'Helder Testnet',
     logo: ETHEREUM_LOGO,
     nativeCurrency: {
       name: 'Ethereum',
