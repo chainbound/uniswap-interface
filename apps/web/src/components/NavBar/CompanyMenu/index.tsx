@@ -1,6 +1,5 @@
 import { useIsTouchDevice } from '@tamagui/core'
 import { ArrowChangeDown } from 'components/Icons/ArrowChangeDown'
-import { NavIcon } from 'components/Logo/NavIcon'
 import { useIsMobileDrawer } from 'components/NavBar/ScreenSizes'
 import { useScreenSize } from 'hooks/screenSize'
 import styled from 'lib/styled-components'
@@ -54,7 +53,9 @@ export function CompanyMenu() {
   const isTouchDevice = useIsTouchDevice()
 
   return (
-    <NavIcon width="48" height="48" data-testid="uniswap-logo" />
+    // <NavIcon width="48" height="48" data-testid="uniswap-logo" />
+    <img src="/images/demo_group.png" alt="Bolt Demo" style={{ width: 'auto', height: '35px' }} />
+
     // <Popover ref={popoverRef} placement="bottom" hoverable stayInFrame allowFlip onOpenChange={setIsOpen}>
     //   <Popover.Trigger>
     //     <Trigger>

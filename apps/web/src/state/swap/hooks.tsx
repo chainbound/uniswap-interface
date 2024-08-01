@@ -48,7 +48,8 @@ export function useSwapAndLimitContext() {
   // from the provider account (hooks/useAccount), instead of the swap context chainId.
   return {
     ...context,
-    chainId: context.isSwapAndLimitContext ? context.chainId : account.chainId,
+    // NOTE(Helder web demo): for pricing we want to use mainnet
+    chainId: UniverseChainId.Mainnet,
   }
 }
 

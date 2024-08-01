@@ -253,7 +253,7 @@ function ShowIncludedComponent() {
       >
         <PopupContainer show>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <img src="/images/bolt_mascot_happy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            {/* <img src="/images/bolt_mascot_happy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} /> */}
             <div
               style={{
                 display: 'flex',

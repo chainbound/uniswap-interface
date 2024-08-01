@@ -22,6 +22,7 @@ import { logSwapQuoteRequest } from 'tracing/swapFlowLoggers'
 import { trace } from 'tracing/trace'
 import { InterfaceEventNameLocal } from 'uniswap/src/features/telemetry/constants'
 import { sendAnalyticsEvent } from 'uniswap/src/features/telemetry/send'
+import { UniverseChainId } from 'uniswap/src/types/chains'
 import { logger } from 'utilities/src/logger/logger'
 
 const UNISWAP_GATEWAY_DNS_URL = process.env.REACT_APP_UNISWAP_GATEWAY_DNS
@@ -67,10 +68,10 @@ function getRoutingAPIConfig(args: GetQuoteArgs): RoutingConfig {
     routingType: URAQuoteType.DUTCH_V2,
     ...(isXv2Arbitrum
       ? {
-        priceImprovementBps,
-        forceOpenOrders,
-        deadlineBufferSecs,
-      }
+          priceImprovementBps,
+          forceOpenOrders,
+          deadlineBufferSecs,
+        }
       : {}),
   }
 
@@ -114,9 +115,9 @@ export const routingApi = createApi({
           } = args
 
           const requestBody = {
-            tokenInChainId,
+            tokenInChainId: UniverseChainId.Mainnet,
             tokenIn,
-            tokenOutChainId,
+            tokenOutChainId: UniverseChainId.Mainnet,
             tokenOut,
             amount,
             sendPortionEnabled,
@@ -171,7 +172,8 @@ export const routingApi = createApi({
             logger.warn(
               'routing/slice',
               'queryFn',
-              `GetQuote failed on Unified Routing API, falling back to client: ${error?.message ?? error?.detail ?? error
+              `GetQuote failed on Unified Routing API, falling back to client: ${
+                error?.message ?? error?.detail ?? error
               }`,
             )
           }

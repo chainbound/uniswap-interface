@@ -12,6 +12,9 @@ import { Statsig } from 'uniswap/src/features/gating/sdk/statsig'
 import { isBetaEnv, isDevEnv } from 'utilities/src/environment'
 
 const Box = styled.div`
+  // make this go away :)
+  display: none;
+
   position: fixed;
   bottom: 20px;
   left: 20px;
