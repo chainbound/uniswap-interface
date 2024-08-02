@@ -21,6 +21,7 @@ import { UNIVERSE_CHAIN_INFO } from 'uniswap/src/constants/chains'
 import Trace from 'uniswap/src/features/telemetry/Trace'
 import { InterfacePageNameLocal } from 'uniswap/src/features/telemetry/constants'
 import { useIsSmartContractAddress } from 'utils/transfer'
+import { usePreconfirmations } from '..'
 
 type SendFormProps = {
   onCurrencyChange?: (selected: CurrencyState) => void
@@ -40,12 +41,12 @@ function useSendButtonState() {
       }
     }
 
-    if (!parsedTokenAmount) {
-      return {
-        label: <Trans i18nKey="common.amountInput.placeholder" />,
-        disabled: true,
-      }
-    }
+    // if (!parsedTokenAmount) {
+    //   return {
+    //     label: <Trans i18nKey="common.amountInput.placeholder" />,
+    //     disabled: true,
+    //   }
+    // }
 
     if (!recipient && !recipientData) {
       return {
@@ -76,6 +77,7 @@ enum SendSpeedBump {
 function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFormProps) {
   const account = useAccount()
   const selectChain = useSelectChain()
+  const { preconfirmedAtSlot: showPreconfirmed, setPreconfirmedAtSlot: setShowPreconfirmed } = usePreconfirmations()
 
   const accountDrawer = useAccountDrawer()
 
@@ -172,7 +174,6 @@ function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFor
   const handleSend = useCallback(() => {
     sendCallback()
       .then(() => {
-        handleModalState(SendFormModalState.None)
         setSendState((prev) => ({
           ...prev,
           exactAmountToken: undefined,
@@ -182,7 +183,10 @@ function SendFormInner({ disableTokenInputs = false, onCurrencyChange }: SendFor
           inputInFiat: true,
         }))
       })
-      .catch(() => undefined)
+      .catch((e) => {
+        console.error('error in sendCallback', e)
+      })
+      .finally(() => handleModalState(SendFormModalState.None))
   }, [handleModalState, sendCallback, setSendState])
 
   return (

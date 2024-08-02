@@ -6,11 +6,16 @@ import { useInterfaceMulticall } from 'hooks/useContract'
 import { useTokenBalances } from 'hooks/useTokenBalances'
 import JSBI from 'jsbi'
 import { useMultipleContractSingleData, useSingleContractMultipleData } from 'lib/hooks/multicall'
-import { useMemo } from 'react'
+import { PreconfirmationsContext } from 'pages/Swap'
+import { useContext, useMemo } from 'react'
 import ERC20ABI from 'uniswap/src/abis/erc20.json'
 import { Erc20Interface } from 'uniswap/src/abis/types/Erc20'
+import { UniverseChainId } from 'uniswap/src/types/chains'
+import { useAsyncMemo } from 'use-async-memo'
 import { isAddress } from 'utilities/src/addresses'
 import { currencyKey } from 'utils/currencyKey'
+
+let ethBalanceBoltRpc = '0'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
@@ -116,7 +121,46 @@ function useRpcCurrencyBalances(
   const { chainId } = useAccount()
   const tokenBalances = useRpcTokenBalances(account, tokens)
   const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
-  const ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
+  let ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
+  const { balanceDecrease } = useContext(PreconfirmationsContext)
+
+  // Fetch ETH balance from Bolt RPC, and update ethBalance accordingly
+  // only if it is different from 0
+  useAsyncMemo(async () => {
+    if (!account) return
+    const boltRpcUrl = 'https://bolt.chainbound.io/rpc'
+    const body = JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_getBalance',
+      params: [account, 'latest'],
+      id: 1,
+    })
+    const balance = await fetch(boltRpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body,
+    })
+      .then((response) => response.json())
+      .then((data: { result: string }) => {
+        return data.result
+      })
+      .catch((error) => {
+        console.error('error while fetching balance from Bolt RPC', error)
+        return '0'
+      })
+    ethBalanceBoltRpc = balance
+  }, [])
+
+  currencies = currencies?.map((currency) => {
+    if (currency?.chainId === UniverseChainId.Helder) {
+      ethBalance = {
+        [account!]: CurrencyAmount.fromRawAmount(nativeOnChain(UniverseChainId.Helder), JSBI.BigInt(ethBalanceBoltRpc)),
+      }
+    }
+    return currency
+  })
 
   return useMemo(
     () =>

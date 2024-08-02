@@ -10,7 +10,8 @@ import { GasFeeResult, GasSpeed, useTransactionGasFee } from 'hooks/useTransacti
 import { useUSDTokenUpdater } from 'hooks/useUSDTokenUpdater'
 import { useCurrencyBalances } from 'lib/hooks/useCurrencyBalance'
 import tryParseCurrencyAmount from 'lib/utils/tryParseCurrencyAmount'
-import { useMemo } from 'react'
+import { PreconfirmationsContext } from 'pages/Swap'
+import { useContext, useMemo } from 'react'
 import { SendState } from 'state/send/SendContext'
 import { useSwapAndLimitContext } from 'state/swap/hooks'
 import { useUnitagByAddress, useUnitagByName } from 'uniswap/src/features/unitags/hooks'
@@ -44,6 +45,7 @@ export function useDerivedSendInfo(state: SendState): SendInfo {
   const { provider } = useWeb3React()
   const { chainId } = useSwapAndLimitContext()
   const { exactAmountToken, exactAmountFiat, inputInFiat, inputCurrency, recipient, validatedRecipientData } = state
+  const { balanceDecrease } = useContext(PreconfirmationsContext)
 
   const { unitag: recipientInputUnitag } = useUnitagByName(validatedRecipientData ? undefined : recipient)
   const recipientInputUnitagUsername = validatedRecipientData?.unitag ?? recipientInputUnitag?.username

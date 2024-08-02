@@ -8,6 +8,13 @@ or visit [app.uniswap.org](https://app.uniswap.org).
 
 ## Running the interface locally
 
+First, address the following issues outlined in these GitHub issues:
+
+- Create a proper `.env.defaults` file if not available: https://github.com/Uniswap/interface/issues/7678#issuecomment-2021792144
+- Create a `__generated__` folder for utils: https://github.com/Uniswap/interface/issues/7631#issuecomment-2240346832
+
+Then, run the following commands:
+
 ```bash
 yarn
 yarn web start

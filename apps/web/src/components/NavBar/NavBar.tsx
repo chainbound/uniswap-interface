@@ -5,7 +5,6 @@ import { GetTheAppButton } from 'components/NavBar/DownloadApp/GetTheAppButton'
 import { PreferenceMenu } from 'components/NavBar/PreferencesMenu'
 import { useTabsVisible } from 'components/NavBar/ScreenSizes'
 import { SearchBar } from 'components/NavBar/SearchBar'
-import { Tabs } from 'components/NavBar/Tabs/Tabs'
 import Row from 'components/Row'
 import Web3Status from 'components/Web3Status'
 import { useScreenSize } from 'hooks/screenSize'
@@ -88,12 +87,12 @@ export const RefreshedNavbar = () => {
       <NavContents>
         <Left>
           <CompanyMenu />
-          {areTabsVisible && <Tabs />}
+          {/* {areTabsVisible && <Tabs />} */}
         </Left>
 
-        <SearchContainer data-cy="center-search-container">
+        {/* <SearchContainer data-cy="center-search-container">
           {!collapseSearchBar && <SearchBar maxHeight={NAV_SEARCH_MAX_HEIGHT} fullScreen={isSmallScreen} />}
-        </SearchContainer>
+        </SearchContainer> */}
 
         <Right>
           {collapseSearchBar && <SearchBar maxHeight={NAV_SEARCH_MAX_HEIGHT} fullScreen={isSmallScreen} />}

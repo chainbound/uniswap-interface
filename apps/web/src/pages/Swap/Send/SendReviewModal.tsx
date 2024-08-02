@@ -92,6 +92,10 @@ export function SendReviewModal({ onConfirm, onDismiss }: { onConfirm: () => voi
     ? [formattedFiatInputAmount, currencySymbolAmount]
     : [currencySymbolAmount, formattedFiatInputAmount]
 
+  // From "The art of Mocking" episode 2
+  // Assuming the input is in ETH with a price of 3,149.69 USD
+  const formattedAmountOutMocked = (1 * 3149.69).toString() + '$'
+
   return (
     <Modal $scrollOverlay isOpen onDismiss={onDismiss} maxHeight="90vh">
       <ModalWrapper data-testid="send-review-modal" gap="md">
@@ -101,7 +105,7 @@ export function SendReviewModal({ onConfirm, onDismiss }: { onConfirm: () => voi
             <SendModalHeader
               label={<Trans i18nKey="common.youreSending" />}
               header={primaryInputView}
-              subheader={secondaryInputView}
+              subheader={formattedAmountOutMocked}
               image={
                 <PortfolioLogo currencies={[inputCurrency]} size={36} chainId={chainId ?? UniverseChainId.Mainnet} />
               }

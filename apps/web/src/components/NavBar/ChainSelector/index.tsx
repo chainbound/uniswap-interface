@@ -1,4 +1,3 @@
-import { showTestnetsAtom } from 'components/AccountDrawer/TestnetsToggle'
 import Column from 'components/Column'
 import { DropdownSelector, StyledMenuContent } from 'components/DropdownSelector'
 import { ChainLogo } from 'components/Logo/ChainLogo'
@@ -15,7 +14,6 @@ import {
 import { useAccount } from 'hooks/useAccount'
 import useSelectChain from 'hooks/useSelectChain'
 import { t } from 'i18n'
-import { useAtomValue } from 'jotai/utils'
 import styled, { css, useTheme } from 'lib/styled-components'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { AlertTriangle } from 'react-feather'
@@ -84,7 +82,7 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
   const popoverRef = useRef<Popover>(null)
   const walletSupportsChain = useWalletSupportedChains()
   const isSupportedChain = useIsSupportedChainIdCallback()
-  const showTestnets = useAtomValue(showTestnetsAtom)
+  const showTestnets = true
   const navRefreshEnabled = useFeatureFlag(FeatureFlags.NavRefresh)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectChain = useSelectChain()
@@ -158,16 +156,19 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
         </Popover.Trigger>
         <NavDropdown width={240} isOpen={isOpen}>
           <ChainsDropdownWrapper>
-            {supportedChains.map((selectorChain) => (
-              <ChainSelectorRow
-                disabled={!walletSupportsChain.includes(selectorChain)}
-                onSelectChain={onSelectChain}
-                targetChain={selectorChain}
-                key={selectorChain}
-                isPending={selectorChain === pendingChainId}
-              />
-            ))}
-            {unsupportedChains.map((selectorChain) => (
+            {supportedChains.map(
+              (selectorChain) =>
+                (selectorChain === UniverseChainId.Helder || selectorChain === UniverseChainId.Mainnet) && (
+                  <ChainSelectorRow
+                    disabled={!walletSupportsChain.includes(selectorChain)}
+                    onSelectChain={onSelectChain}
+                    targetChain={selectorChain}
+                    key={selectorChain}
+                    isPending={selectorChain === pendingChainId}
+                  />
+                ),
+            )}
+            {/* {unsupportedChains.map((selectorChain) => (
               <ChainSelectorRow
                 disabled
                 onSelectChain={() => undefined}
@@ -175,7 +176,7 @@ export const ChainSelector = ({ leftAlign }: { leftAlign?: boolean }) => {
                 key={selectorChain}
                 isPending={false}
               />
-            ))}
+            ))} */}
           </ChainsDropdownWrapper>
         </NavDropdown>
       </Popover>

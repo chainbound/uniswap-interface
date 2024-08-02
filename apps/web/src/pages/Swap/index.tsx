@@ -1,5 +1,6 @@
 import { InterfacePageName } from '@uniswap/analytics-events'
 import { Currency } from '@uniswap/sdk-core'
+import { PopupContainer } from 'components/Banner/shared/styled'
 import { NetworkAlert } from 'components/NetworkAlert/NetworkAlert'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import SwapHeader from 'components/swap/SwapHeader'
@@ -10,8 +11,7 @@ import { useAccount } from 'hooks/useAccount'
 import { BuyForm } from 'pages/Swap/Buy/BuyForm'
 import { LimitFormWrapper } from 'pages/Swap/Limit/LimitForm'
 import { SendForm } from 'pages/Swap/Send/SendForm'
-import { SwapForm } from 'pages/Swap/SwapForm'
-import { ReactNode } from 'react'
+import { Dispatch, ReactNode, SetStateAction, createContext, useContext, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { InterfaceTrade, TradeState } from 'state/routing/types'
 import { isPreviewTrade } from 'state/routing/utils'
@@ -68,6 +68,60 @@ export default function SwapPage({ className }: { className?: string }) {
   )
 }
 
+export const PreconfirmationsContext = createContext<{
+  preconfirmedAtSlot?: { slot: number; latency?: number }
+  nonceWithPreconfs?: number
+  includedInBlock?: { block: number; hash: string }
+  noProposerInTheLookahead: boolean
+  internalError?: string
+  balanceDecrease: bigint
+  setPreconfirmedAtSlot: Dispatch<SetStateAction<{ slot: number; latency?: number } | undefined>>
+  setNonceWithPreconfs: Dispatch<SetStateAction<number | undefined>>
+  setIncludedInBlock: Dispatch<SetStateAction<{ block: number; hash: string } | undefined>>
+  setNoProposerInTheLookahead: Dispatch<SetStateAction<boolean>>
+  setInternalError: Dispatch<SetStateAction<string | undefined>>
+  setBalanceDecrease: Dispatch<SetStateAction<bigint>>
+}>({
+  noProposerInTheLookahead: false,
+  balanceDecrease: BigInt(0),
+  setPreconfirmedAtSlot: () => null,
+  setNonceWithPreconfs: () => null,
+  setIncludedInBlock: () => null,
+  setNoProposerInTheLookahead: () => null,
+  setInternalError: () => null,
+  setBalanceDecrease: () => null,
+})
+export const PreconfirmedProvider = ({ children }: any) => {
+  const [preconfirmedAtSlot, setPreconfirmedAtSlot] = useState<{ slot: number; latency?: number } | undefined>()
+  const [nonceWithPreconfs, setNonceWithPreconfs] = useState<number | undefined>()
+  const [includedInBlock, setIncludedInBlock] = useState<{ block: number; hash: string } | undefined>()
+  const [noProposerInTheLookahead, setNoProposerInTheLookahead] = useState(false)
+  const [internalError, setInternalError] = useState<string | undefined>()
+  const [balanceDecrease, setBalanceDecrease] = useState<bigint>(BigInt(0))
+
+  return (
+    <PreconfirmationsContext.Provider
+      value={{
+        preconfirmedAtSlot,
+        balanceDecrease,
+        noProposerInTheLookahead,
+        setNoProposerInTheLookahead,
+        setPreconfirmedAtSlot,
+        nonceWithPreconfs,
+        setNonceWithPreconfs,
+        includedInBlock,
+        setIncludedInBlock,
+        internalError,
+        setInternalError,
+        setBalanceDecrease,
+      }}
+    >
+      {children}
+    </PreconfirmationsContext.Provider>
+  )
+}
+export const usePreconfirmations = () => useContext(PreconfirmationsContext)
+
 /**
  * The swap component displays the swap interface, manages state for the swap, and triggers onchain swaps.
  *
@@ -101,33 +155,237 @@ export function Swap({
   const forAggregatorEnabled = useFeatureFlag(FeatureFlags.ForAggregatorWeb)
 
   return (
-    <SwapAndLimitContextProvider
-      initialChainId={chainId}
-      initialInputCurrency={initialInputCurrency}
-      initialOutputCurrency={initialOutputCurrency}
-      multichainUXEnabled={multichainUXEnabled}
-    >
-      {/* TODO: Move SwapContextProvider inside Swap tab ONLY after SwapHeader removes references to trade / autoSlippage */}
-      <SwapAndLimitContext.Consumer>
-        {({ currentTab }) => (
-          <SwapContextProvider multichainUXEnabled={multichainUXEnabled}>
-            <Flex width="100%">
-              <SwapWrapper isDark={isDark} className={className} id="swap-page">
-                <SwapHeader compact={compact || !screenSize.sm} syncTabToUrl={syncTabToUrl} />
-                {currentTab === SwapTab.Swap && (
-                  <SwapForm onCurrencyChange={onCurrencyChange} disableTokenInputs={disableTokenInputs} />
-                )}
-                {currentTab === SwapTab.Limit && <LimitFormWrapper onCurrencyChange={onCurrencyChange} />}
-                {currentTab === SwapTab.Send && (
-                  <SendForm disableTokenInputs={disableTokenInputs} onCurrencyChange={onCurrencyChange} />
-                )}
-                {currentTab === SwapTab.Buy && forAggregatorEnabled && <BuyForm disabled={disableTokenInputs} />}
-              </SwapWrapper>
-              <NetworkAlert />
-            </Flex>
-          </SwapContextProvider>
-        )}
-      </SwapAndLimitContext.Consumer>
-    </SwapAndLimitContextProvider>
+    <PreconfirmedProvider>
+      <ShowPreconfirmedComponent />
+      <ShowIncludedComponent />
+      <ShowBadLuckComponent />
+      <ShowInternalErrorComponent />
+
+      <SwapAndLimitContextProvider
+        initialChainId={chainId}
+        initialInputCurrency={initialInputCurrency}
+        initialOutputCurrency={initialOutputCurrency}
+        multichainUXEnabled={multichainUXEnabled}
+      >
+        {/* TODO: Move SwapContextProvider inside Swap tab ONLY after SwapHeader removes references to trade / autoSlippage */}
+        <SwapAndLimitContext.Consumer>
+          {({ currentTab }) => (
+            <SwapContextProvider multichainUXEnabled={multichainUXEnabled}>
+              <Flex width="100%">
+                <SwapWrapper isDark={isDark} className={className} id="swap-page">
+                  <SwapHeader compact={compact || !screenSize.sm} syncTabToUrl={syncTabToUrl} />
+                  {currentTab === SwapTab.Limit && <LimitFormWrapper onCurrencyChange={onCurrencyChange} />}
+                  {currentTab === SwapTab.Send && (
+                    <SendForm disableTokenInputs={disableTokenInputs} onCurrencyChange={onCurrencyChange} />
+                  )}
+                  {currentTab === SwapTab.Buy && forAggregatorEnabled && <BuyForm disabled={disableTokenInputs} />}
+                </SwapWrapper>
+                <NetworkAlert />
+              </Flex>
+            </SwapContextProvider>
+          )}
+        </SwapAndLimitContext.Consumer>
+      </SwapAndLimitContextProvider>
+    </PreconfirmedProvider>
+  )
+}
+
+const DORA_URL = (slot?: number) => `https://dora.helder-devnets.xyz/slot/${slot}`
+const BLOCKSCOUT_URL = (tx?: string) => `https://blockscout.helder-devnets.xyz/tx/${tx}`
+
+function ShowPreconfirmedComponent() {
+  const { preconfirmedAtSlot } = usePreconfirmations()
+
+  return (
+    <div style={{ display: !!preconfirmedAtSlot ? 'block' : 'none' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '90px',
+          right: '15px',
+          display: 'flex',
+          justifyContent: 'end',
+          zIndex: 999,
+        }}
+      >
+        <PopupContainer show>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <img src="/images/bolt_mascot_smile.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <div
+              style={{
+                display: 'flex',
+                marginTop: '-12px',
+                flexDirection: 'column',
+                gap: '8px',
+                lineHeight: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <p style={{ fontWeight: '500', width: '100%', textAlign: 'center' }}>
+                Transaction preconfirmed in {preconfirmedAtSlot?.latency ?? 80}ms
+              </p>
+              <a
+                style={{
+                  cursor: 'pointer',
+                  fontSize: 'small',
+                  color: '#FC72FF',
+                  fontWeight: '400',
+                }}
+                href={DORA_URL(preconfirmedAtSlot?.slot)}
+                target="_blank"
+              >
+                It will be included soon™️
+              </a>
+            </div>
+          </div>
+        </PopupContainer>
+      </div>
+    </div>
+  )
+}
+
+function ShowIncludedComponent() {
+  const { includedInBlock } = usePreconfirmations()
+
+  return (
+    <div style={{ display: !!includedInBlock ? 'block' : 'none' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '90px',
+          right: '15px',
+          display: 'flex',
+          justifyContent: 'end',
+          zIndex: 999,
+        }}
+      >
+        <PopupContainer show>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {/* <img src="/images/bolt_mascot_happy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} /> */}
+            <div
+              style={{
+                display: 'flex',
+                marginTop: '-12px',
+                flexDirection: 'column',
+                gap: '8px',
+                lineHeight: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <p style={{ fontWeight: '500', width: '100%', textAlign: 'center' }}>Transaction included!</p>
+              <a
+                style={{
+                  cursor: 'pointer',
+                  fontSize: 'small',
+                  color: '#FC72FF',
+                  fontWeight: '400',
+                }}
+                href={BLOCKSCOUT_URL(includedInBlock?.hash)}
+                target="_blank"
+              >
+                View on Blockscout
+              </a>
+            </div>
+          </div>
+        </PopupContainer>
+      </div>
+    </div>
+  )
+}
+
+function ShowBadLuckComponent() {
+  const { noProposerInTheLookahead } = usePreconfirmations()
+
+  return (
+    <div style={{ display: noProposerInTheLookahead ? 'block' : 'none' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '90px',
+          right: '15px',
+          display: 'flex',
+          justifyContent: 'end',
+          zIndex: 999,
+        }}
+      >
+        <PopupContainer show>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <img src="/images/bolt_mascot_unhappy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                lineHeight: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontWeight: '500',
+                  lineHeight: '1.25',
+                  textAlign: 'center',
+                  marginTop: '0px',
+                  marginBottom: '0px',
+                  width: '100%',
+                }}
+              >
+                No luck this time, try again later!
+              </p>
+            </div>
+          </div>
+        </PopupContainer>
+      </div>
+    </div>
+  )
+}
+
+function ShowInternalErrorComponent() {
+  const { internalError } = usePreconfirmations()
+
+  return (
+    <div style={{ display: !!internalError ? 'block' : 'none' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: '90px',
+          right: '15px',
+          display: 'flex',
+          justifyContent: 'end',
+          zIndex: 999,
+        }}
+      >
+        <PopupContainer show>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <img src="/images/bolt_mascot_unhappy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                lineHeight: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontWeight: '500',
+                  lineHeight: '1.25',
+                  textAlign: 'center',
+                  marginTop: '0px',
+                  marginBottom: '0px',
+                }}
+              >
+                Something went wrong: {internalError}
+              </p>
+            </div>
+          </div>
+        </PopupContainer>
+      </div>
+    </div>
   )
 }

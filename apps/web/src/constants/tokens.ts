@@ -396,6 +396,13 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId: number]: Token | undefined } =
     'WETH',
     'Wrapped Ether',
   ),
+  [UniverseChainId.Helder]: new Token(
+    UniverseChainId.Helder,
+    '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
+    18,
+    'WETH',
+    'Wrapped Ether',
+  ),
   [UniverseChainId.Polygon]: new Token(
     UniverseChainId.Polygon,
     '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',

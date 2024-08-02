@@ -39,7 +39,7 @@ export default function Landing() {
     const timeoutId = setTimeout(
       () => {
         if (redirectOnConnect.current) {
-          navigate('/swap')
+          navigate('/send')
         } else if (account.address && queryParams.intro) {
           disconnect()
         }
@@ -62,7 +62,7 @@ export default function Landing() {
   // The intro query parameter can be used to override this
 
   if ((account.isConnected || hasRecentConnection) && !queryParams.intro) {
-    return <Navigate to={{ ...location, pathname: '/swap' }} replace />
+    return <Navigate to={{ ...location, pathname: '/send' }} replace />
   }
 
   return (

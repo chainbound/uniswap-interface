@@ -6,17 +6,19 @@ import { Z_INDEX } from 'theme/zIndex'
 
 export const PopupContainer = styled.div<{ show: boolean }>`
   ${({ show }) => !show && 'display: none'};
-  background-color: ${({ theme }) => theme.surface2};
+  background-color: ${({ theme }) => theme.accent2};
   color: ${({ theme }) => theme.neutral1};
-  position: fixed;
   z-index: ${Z_INDEX.sticky};
-  bottom: 40px;
-  right: 20px;
-  width: 360px;
+  right: 2px;
+  width: 370px;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  flex-direction: column;
+  display: flex;
 
   user-select: none;
   border-radius: 20px;
-  height: 92px;
   border: 1.3px solid ${({ theme }) => theme.surface3};
 
   @media only screen and (max-width: ${BREAKPOINTS.md}px) {

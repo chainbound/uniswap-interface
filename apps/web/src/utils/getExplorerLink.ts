@@ -4,6 +4,7 @@ const BLOCK_EXPLORER_PREFIXES: { [chainId: number]: string } = {
   [UniverseChainId.Mainnet]: 'https://etherscan.io',
   [UniverseChainId.Goerli]: 'https://goerli.etherscan.io',
   [UniverseChainId.Sepolia]: 'https://sepolia.etherscan.io',
+  [UniverseChainId.Helder]: 'https://blockscout.helder-devnets.xyz',
   [UniverseChainId.ArbitrumOne]: 'https://arbiscan.io',
   [UniverseChainId.ArbitrumGoerli]: 'https://goerli.arbiscan.io',
   [UniverseChainId.Optimism]: 'https://optimistic.etherscan.io',

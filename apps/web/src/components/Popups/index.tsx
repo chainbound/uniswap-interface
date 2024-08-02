@@ -1,4 +1,5 @@
 import { useAccountDrawer } from 'components/AccountDrawer/MiniPortfolio/hooks'
+import { PopupContainer, StyledXButton } from 'components/Banner/shared/styled'
 import { AutoColumn } from 'components/Column'
 import ClaimPopup from 'components/Popups/ClaimPopup'
 import PopupItem from 'components/Popups/PopupItem'
@@ -34,7 +35,7 @@ const MobilePopupInner = styled.div`
     display: none;
   }
 `
-const FixedPopupColumn = styled(AutoColumn)<{
+const FixedPopupColumn = styled(AutoColumn) <{
   drawerOpen: boolean
 }>`
   position: fixed;

@@ -1,8 +1,5 @@
 import { RowBetween, RowFixed } from 'components/Row'
-import SettingsTab from 'components/Settings'
-import SwapBuyFiatButton from 'components/swap/SwapBuyFiatButton'
 import { SwapHeaderTabButton } from 'components/swap/styled'
-import { Trans } from 'i18n'
 import styled from 'lib/styled-components'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -72,56 +69,5 @@ export default function SwapHeader({ compact, syncTabToUrl }: { compact: boolean
     [navigate, setCurrentTab, syncTabToUrl],
   )
 
-  return (
-    <StyledSwapHeader>
-      <HeaderButtonContainer compact={compact}>
-        <SwapHeaderTabButton
-          as={pathname === '/swap' ? 'h1' : 'button'}
-          role="button"
-          tabIndex={0}
-          $isActive={currentTab === SwapTab.Swap}
-          onClick={() => {
-            onTabClick(SwapTab.Swap)
-          }}
-        >
-          <Trans i18nKey="common.swap" />
-        </SwapHeaderTabButton>
-        <SwapHeaderTabButton
-          $isActive={currentTab === SwapTab.Limit}
-          onClick={() => {
-            onTabClick(SwapTab.Limit)
-          }}
-        >
-          <Trans i18nKey="swap.limit" />
-        </SwapHeaderTabButton>
-        {!isIFramed() && (
-          <SwapHeaderTabButton
-            $isActive={currentTab === SwapTab.Send}
-            onClick={() => {
-              onTabClick(SwapTab.Send)
-            }}
-          >
-            <Trans i18nKey="common.send.button" />
-          </SwapHeaderTabButton>
-        )}
-        {forAggregatorEnabled ? (
-          <SwapHeaderTabButton
-            $isActive={currentTab === SwapTab.Buy}
-            onClick={() => {
-              onTabClick(SwapTab.Buy)
-            }}
-          >
-            <Trans i18nKey="common.buy.label" />
-          </SwapHeaderTabButton>
-        ) : (
-          <SwapBuyFiatButton triggerBuyFlow={triggerBuyFlow} setTriggerBuyFlow={setTriggerBuyFlow} />
-        )}
-      </HeaderButtonContainer>
-      {currentTab === SwapTab.Swap && (
-        <RowFixed>
-          <SettingsTab autoSlippage={autoSlippage} chainId={initialChainId} compact={compact} trade={trade.trade} />
-        </RowFixed>
-      )}
-    </StyledSwapHeader>
-  )
+  return <></>
 }

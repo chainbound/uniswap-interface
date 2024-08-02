@@ -49,6 +49,27 @@ export function AppLayout() {
 
   return (
     <AppContainer>
+      {/* place a background image */}
+      <img
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 1,
+          objectFit: 'cover',
+        }}
+        src="/images/background.png"
+        alt="background"
+      />
+
+      <img
+        src="/images/bolt_logo.png"
+        alt="Bolt Logo"
+        style={{ width: 'auto', height: '35px', position: 'fixed', bottom: '15px', left: '15px', zIndex: 4000 }}
+      />
+
       <Header />
       <AppBody>
         <Body />

@@ -22,6 +22,7 @@ import { logSwapQuoteRequest } from 'tracing/swapFlowLoggers'
 import { trace } from 'tracing/trace'
 import { InterfaceEventNameLocal } from 'uniswap/src/features/telemetry/constants'
 import { sendAnalyticsEvent } from 'uniswap/src/features/telemetry/send'
+import { UniverseChainId } from 'uniswap/src/types/chains'
 import { logger } from 'utilities/src/logger/logger'
 
 const UNISWAP_GATEWAY_DNS_URL = process.env.REACT_APP_UNISWAP_GATEWAY_DNS
@@ -100,6 +101,7 @@ export const routingApi = createApi({
   endpoints: (build) => ({
     getQuote: build.query<TradeResult, GetQuoteArgs>({
       queryFn(args, _api, _extraOptions, fetch) {
+        // NOTE: used for many things, also token balances (ETH included)
         return trace({ name: 'Quote', op: 'quote', data: { ...args } }, async (trace) => {
           logSwapQuoteRequest(args.tokenInChainId, args.routerPreference, false)
           const {
@@ -113,9 +115,9 @@ export const routingApi = createApi({
           } = args
 
           const requestBody = {
-            tokenInChainId,
+            tokenInChainId: UniverseChainId.Mainnet,
             tokenIn,
-            tokenOutChainId,
+            tokenOutChainId: UniverseChainId.Mainnet,
             tokenOut,
             amount,
             sendPortionEnabled,
@@ -131,6 +133,7 @@ export const routingApi = createApi({
             return trace.child({ name: 'Quote on server', op: 'quote.server' }, async () => {
               const response = await fetch({
                 method: 'POST',
+                // TODO: this should be changed with BOLT RPC
                 url: `${UNISWAP_GATEWAY_DNS_URL}/quote`,
                 body: JSON.stringify(requestBody),
                 headers: {
