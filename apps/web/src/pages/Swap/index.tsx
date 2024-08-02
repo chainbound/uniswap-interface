@@ -68,36 +68,42 @@ export default function SwapPage({ className }: { className?: string }) {
   )
 }
 
-const PreconfirmationsContext = createContext<{
-  preconfirmedAtSlot?: number
+export const PreconfirmationsContext = createContext<{
+  preconfirmedAtSlot?: { slot: number; latency?: number }
   nonceWithPreconfs?: number
   includedInBlock?: { block: number; hash: string }
   noProposerInTheLookahead: boolean
   internalError?: string
-  setPreconfirmedAtSlot: Dispatch<SetStateAction<number | undefined>>
+  balanceDecrease: bigint
+  setPreconfirmedAtSlot: Dispatch<SetStateAction<{ slot: number; latency?: number } | undefined>>
   setNonceWithPreconfs: Dispatch<SetStateAction<number | undefined>>
   setIncludedInBlock: Dispatch<SetStateAction<{ block: number; hash: string } | undefined>>
   setNoProposerInTheLookahead: Dispatch<SetStateAction<boolean>>
   setInternalError: Dispatch<SetStateAction<string | undefined>>
+  setBalanceDecrease: Dispatch<SetStateAction<bigint>>
 }>({
   noProposerInTheLookahead: false,
+  balanceDecrease: BigInt(0),
   setPreconfirmedAtSlot: () => null,
   setNonceWithPreconfs: () => null,
   setIncludedInBlock: () => null,
   setNoProposerInTheLookahead: () => null,
   setInternalError: () => null,
+  setBalanceDecrease: () => null,
 })
 export const PreconfirmedProvider = ({ children }: any) => {
-  const [preconfirmedAtSlot, setPreconfirmedAtSlot] = useState<number | undefined>()
+  const [preconfirmedAtSlot, setPreconfirmedAtSlot] = useState<{ slot: number; latency?: number } | undefined>()
   const [nonceWithPreconfs, setNonceWithPreconfs] = useState<number | undefined>()
   const [includedInBlock, setIncludedInBlock] = useState<{ block: number; hash: string } | undefined>()
   const [noProposerInTheLookahead, setNoProposerInTheLookahead] = useState(false)
   const [internalError, setInternalError] = useState<string | undefined>()
+  const [balanceDecrease, setBalanceDecrease] = useState<bigint>(BigInt(0))
 
   return (
     <PreconfirmationsContext.Provider
       value={{
         preconfirmedAtSlot,
+        balanceDecrease,
         noProposerInTheLookahead,
         setNoProposerInTheLookahead,
         setPreconfirmedAtSlot,
@@ -107,6 +113,7 @@ export const PreconfirmedProvider = ({ children }: any) => {
         setIncludedInBlock,
         internalError,
         setInternalError,
+        setBalanceDecrease,
       }}
     >
       {children}
@@ -190,7 +197,7 @@ function ShowPreconfirmedComponent() {
   const { preconfirmedAtSlot } = usePreconfirmations()
 
   return (
-    <div style={{ display: preconfirmedAtSlot ? 'block' : 'none' }}>
+    <div style={{ display: !!preconfirmedAtSlot ? 'block' : 'none' }}>
       <div
         style={{
           position: 'fixed',
@@ -215,7 +222,9 @@ function ShowPreconfirmedComponent() {
                 alignItems: 'center',
               }}
             >
-              <p style={{ fontWeight: '500', width: '200px', textAlign: 'center' }}>Transaction preconfirmed!</p>
+              <p style={{ fontWeight: '500', width: '100%', textAlign: 'center' }}>
+                Transaction preconfirmed in {preconfirmedAtSlot?.latency ?? 80}ms
+              </p>
               <a
                 style={{
                   cursor: 'pointer',
@@ -223,7 +232,7 @@ function ShowPreconfirmedComponent() {
                   color: '#FC72FF',
                   fontWeight: '400',
                 }}
-                href={DORA_URL(preconfirmedAtSlot)}
+                href={DORA_URL(preconfirmedAtSlot?.slot)}
                 target="_blank"
               >
                 It will be included soon™️
@@ -265,7 +274,7 @@ function ShowIncludedComponent() {
                 alignItems: 'center',
               }}
             >
-              <p style={{ fontWeight: '500', width: '200px', textAlign: 'center' }}>Transaction included!</p>
+              <p style={{ fontWeight: '500', width: '100%', textAlign: 'center' }}>Transaction included!</p>
               <a
                 style={{
                   cursor: 'pointer',
@@ -321,9 +330,10 @@ function ShowBadLuckComponent() {
                   textAlign: 'center',
                   marginTop: '0px',
                   marginBottom: '0px',
+                  width: '100%',
                 }}
               >
-                No luck this time, please try again later!
+                No luck this time, try again later!
               </p>
             </div>
           </div>
@@ -337,7 +347,7 @@ function ShowInternalErrorComponent() {
   const { internalError } = usePreconfirmations()
 
   return (
-    <div style={{ display: internalError ? 'block' : 'none' }}>
+    <div style={{ display: !!internalError ? 'block' : 'none' }}>
       <div
         style={{
           position: 'fixed',

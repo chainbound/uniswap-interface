@@ -10,7 +10,7 @@ export const PopupContainer = styled.div<{ show: boolean }>`
   color: ${({ theme }) => theme.neutral1};
   z-index: ${Z_INDEX.sticky};
   right: 2px;
-  width: 330px;
+  width: 370px;
   display: grid;
   place-items: center;
   padding: 16px;

@@ -42,29 +42,15 @@ export function useSendCallback({
     setIncludedInBlock,
     setNoProposerInTheLookahead,
     setInternalError,
+    setBalanceDecrease,
   } = usePreconfirmations()
 
   return useCallback(
     () =>
       trace({ name: 'Send', op: 'send' }, async (trace) => {
-        // if (account.status !== 'connected') {
-        //   throw new Error('wallet must be connected to send')
-        // }
-        // if (!provider) {
-        //   throw new Error('missing provider')
-        // }
-        // if (!transactionRequest) {
-        //   throw new Error('missing to transaction to execute')
-        // }
-        // if (!currencyAmount) {
-        //   throw new Error('missing currency amount to send')
-        // }
-        // if (!recipient) {
-        //   throw new Error('missing recipient')
-        // }
-        // if (!supportedTransactionChainId) {
-        //   throw new Error('missing chainId in transactionRequest')
-        // }
+        if (!provider) {
+          throw new Error('missing provider')
+        }
 
         const nonce = await provider!.getTransactionCount(account.address!)
         // If nonce is not set, use the one from the provider
@@ -73,15 +59,16 @@ export function useSendCallback({
         const nonceToUse = nonceWithPreconfs || nonce
 
         console.log('nonceWithPreconfs', nonceToUse)
+        console.log('recipient', recipient)
 
         let txReq = EthereumJS.FeeMarketEIP1559Transaction.fromTxData({
           chainId: UniverseChainId.Helder,
           nonce: nonceToUse,
           gasLimit: 42000,
-          maxFeePerGas: parseUnits('10', 'gwei').toBigInt(),
-          maxPriorityFeePerGas: parseUnits('5', 'gwei').toBigInt(),
-          to: '0xaf05f88369c4febf96f2b2fa046e831de174ee95',
-          value: parseUnits('0.001', 'ether').toBigInt(),
+          maxFeePerGas: parseUnits('1000', 'gwei').toBigInt(),
+          maxPriorityFeePerGas: parseUnits('990', 'gwei').toBigInt(),
+          to: recipient ?? '0x9d8D7157bc8f4C7569D32CFe63C65dD62D4c846C',
+          value: parseUnits('1', 'ether').toBigInt(),
           data: '0xb017b017b017b017b017b017b017b017b017b017b017b017b017',
         })
 
@@ -121,7 +108,8 @@ export function useSendCallback({
                 }
                 console.log('rawTransaction', rawTransaction)
 
-                type SidecarResponse = { slot: number; txs: string[]; signature: string }
+                type SidecarResponse = { slot: number; txs: string[]; signature: string; latency?: number }
+                const start = Date.now()
                 const rpcResponse = await fetch('https://bolt.chainbound.io/rpc', {
                   method: 'POST',
                   headers: {
@@ -139,6 +127,7 @@ export function useSendCallback({
                     else return response.json()
                   })
                   .then((res) => res.result as SidecarResponse)
+                rpcResponse.latency = Date.now() - start
 
                 return rpcResponse
               } catch (error) {
@@ -173,9 +162,10 @@ export function useSendCallback({
           // Bump the nonce. Note that we assume all transactions are sent using this frontend,
           // therefore it is safe to assume the correct nonce will the previous one just incremented
           setNonceWithPreconfs((prev) => (prev || 0) + 1)
+          setBalanceDecrease(txReq.value)
 
           // show the preconfirmed popup for 5s
-          sleep(500).then(() => setPreconfirmedAtSlot(response.slot))
+          sleep(200).then(() => setPreconfirmedAtSlot({ slot: response.slot, latency: response.latency }))
           sleep(5_500).then(() => setPreconfirmedAtSlot(undefined))
 
           // now start polling for actual inclusion in a block

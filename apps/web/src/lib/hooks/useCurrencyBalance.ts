@@ -6,7 +6,8 @@ import { useInterfaceMulticall } from 'hooks/useContract'
 import { useTokenBalances } from 'hooks/useTokenBalances'
 import JSBI from 'jsbi'
 import { useMultipleContractSingleData, useSingleContractMultipleData } from 'lib/hooks/multicall'
-import { useMemo } from 'react'
+import { PreconfirmationsContext } from 'pages/Swap'
+import { useContext, useMemo } from 'react'
 import ERC20ABI from 'uniswap/src/abis/erc20.json'
 import { Erc20Interface } from 'uniswap/src/abis/types/Erc20'
 import { UniverseChainId } from 'uniswap/src/types/chains'
@@ -29,10 +30,10 @@ function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefined)[]):
     () =>
       uncheckedAddresses
         ? uncheckedAddresses
-          .map(isAddress)
-          .filter((a): a is string => a !== false)
-          .sort()
-          .map((addr) => [addr])
+            .map(isAddress)
+            .filter((a): a is string => a !== false)
+            .sort()
+            .map((addr) => [addr])
         : [],
     [uncheckedAddresses],
   )
@@ -87,13 +88,13 @@ export function useRpcTokenBalancesWithLoadingIndicator(
     () => [
       address && validatedTokens.length > 0
         ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
-          const value = balances?.[i]?.result?.[0]
-          const amount = value ? JSBI.BigInt(value.toString()) : undefined
-          if (amount) {
-            memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
-          }
-          return memo
-        }, {})
+            const value = balances?.[i]?.result?.[0]
+            const amount = value ? JSBI.BigInt(value.toString()) : undefined
+            if (amount) {
+              memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+            }
+            return memo
+          }, {})
         : {},
       anyLoading,
     ],
@@ -121,19 +122,19 @@ function useRpcCurrencyBalances(
   const tokenBalances = useRpcTokenBalances(account, tokens)
   const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
   let ethBalance = useNativeCurrencyBalances(useMemo(() => (containsETH ? [account] : []), [containsETH, account]))
+  const { balanceDecrease } = useContext(PreconfirmationsContext)
 
   // Fetch ETH balance from Bolt RPC, and update ethBalance accordingly
   // only if it is different from 0
   useAsyncMemo(async () => {
-    if (!account)
-      return
+    if (!account) return
     const boltRpcUrl = 'https://bolt.chainbound.io/rpc'
     const body = JSON.stringify({
       jsonrpc: '2.0',
       method: 'eth_getBalance',
       params: [account, 'latest'],
       id: 1,
-    });
+    })
     const balance = await fetch(boltRpcUrl, {
       method: 'POST',
       headers: {
@@ -145,7 +146,10 @@ function useRpcCurrencyBalances(
       .then((data: { result: string }) => {
         return data.result
       })
-      .catch((error) => { console.error('error while fetching balance from Bolt RPC', error); return '0' })
+      .catch((error) => {
+        console.error('error while fetching balance from Bolt RPC', error)
+        return '0'
+      })
     ethBalanceBoltRpc = balance
   }, [])
 

@@ -22,7 +22,7 @@ import {
   StyledNumericalInput,
   useWidthAdjustedDisplayValue,
 } from 'pages/Swap/common/shared'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import { useSendContext } from 'state/send/SendContext'
 import { SendInputError } from 'state/send/hooks'
 import { useSwapAndLimitContext } from 'state/swap/hooks'
@@ -33,6 +33,7 @@ import { UniverseChainId } from 'uniswap/src/types/chains'
 import useResizeObserver from 'use-resize-observer'
 import { NumberType, useFormatter } from 'utils/formatNumbers'
 import { maxAmountSpend } from 'utils/maxAmountSpend'
+import { PreconfirmationsContext } from '..'
 
 const Wrapper = styled(Column)<{ $disabled: boolean }>`
   opacity: ${({ $disabled }) => (!$disabled ? 1 : 0.4)};
@@ -117,7 +118,15 @@ const AlternateCurrencyDisplayRow = styled(Row)<{ $disabled: boolean }>`
     `}
 `
 
-const AlternateCurrencyDisplay = ({ disabled, onToggle }: { disabled: boolean; onToggle: () => void }) => {
+const AlternateCurrencyDisplay = ({
+  disabled,
+  onToggle,
+  displayedValue,
+}: {
+  disabled: boolean
+  onToggle: () => void
+  displayedValue: string
+}) => {
   const { formatConvertedFiatNumberOrString, formatNumberOrString } = useFormatter()
   const activeCurrency = useActiveLocalCurrency()
 
@@ -134,6 +143,10 @@ const AlternateCurrencyDisplay = ({ disabled, onToggle }: { disabled: boolean; o
         input: exactAmountOut || '0',
         type: NumberType.PortfolioBalance,
       })
+
+  // From "The art of Mocking" chapter 2
+  // Assuming the input is in ETH with a price of 3,149.69 USD
+  const formattedAmountOutMocked = (Number(displayedValue) * 3149.69).toString() + '$'
 
   const displayCurrency = inputInFiat ? inputCurrency?.symbol ?? '' : activeCurrency
   const formattedAlternateCurrency = formattedAmountOut + ' ' + displayCurrency
@@ -152,7 +165,7 @@ const AlternateCurrencyDisplay = ({ disabled, onToggle }: { disabled: boolean; o
         onClick={disabled ? undefined : onToggle}
       >
         <ThemedText.BodySecondary fontSize="16px" lineHeight="24px" color="neutral3">
-          {formattedAlternateCurrency}
+          {formattedAmountOutMocked}
         </ThemedText.BodySecondary>
         <StyledUpAndDownArrowIcon />
       </AlternateCurrencyDisplayRow>
@@ -198,6 +211,7 @@ export default function SendCurrencyInputForm({
   const { formatCurrencyAmount } = useFormatter()
   const { symbol: fiatSymbol } = useActiveLocalCurrencyComponents()
   const { formatNumber } = useFormatter()
+  const { balanceDecrease } = useContext(PreconfirmationsContext)
 
   const { sendState, setSendState, derivedSendInfo } = useSendContext()
   const { inputInFiat, exactAmountToken, exactAmountFiat, inputCurrency } = sendState
@@ -216,6 +230,17 @@ export default function SendCurrencyInputForm({
     amount: currencyBalance,
     type: NumberType.TokenNonTx,
   })
+
+  const formattedBalanceWithPreconfs = useMemo(() => {
+    if (balanceDecrease == 0n) {
+      return formattedBalance
+    }
+    // Assumes we send just 1 ETH in the demo
+    const splitted = formattedBalance.split('')
+    const decreaseInEther = Number(balanceDecrease.toString().split('')[0])
+    splitted[4] = (Number(splitted[4]) - decreaseInEther).toString()
+    return splitted.join('')
+  }, [balanceDecrease])
 
   const fiatBalanceValue = useUSDPrice(currencyBalance, inputCurrency)
   const displayValue = inputInFiat ? exactAmountFiat : exactAmountToken
@@ -299,6 +324,8 @@ export default function SendCurrencyInputForm({
     [account.isConnected],
   )
 
+  console.log('display value', displayValue)
+
   return (
     <Wrapper $disabled={disabled}>
       <InputWrapper>
@@ -322,6 +349,7 @@ export default function SendCurrencyInputForm({
           <NumericalInputMimic ref={hiddenObserver.ref}>{displayValue}</NumericalInputMimic>
         </NumericalInputWrapper>
         <AlternateCurrencyDisplay
+          displayedValue={displayValue}
           disabled={fiatCurrencyEqualsTransferCurrency}
           onToggle={toggleFiatInputAmountEnabled}
         />
@@ -341,7 +369,7 @@ export default function SendCurrencyInputForm({
                   </ThemedText.BodyPrimary>
                   <Row gap="xs" width="100%">
                     {currencyBalance && (
-                      <ThemedText.LabelMicro lineHeight="16px">{`Balance: ${formattedBalance}`}</ThemedText.LabelMicro>
+                      <ThemedText.LabelMicro lineHeight="16px">{`Balance: ${formattedBalanceWithPreconfs == '-' ? formattedBalance : formattedBalanceWithPreconfs}`}</ThemedText.LabelMicro>
                     )}
                     {Boolean(fiatBalanceValue.data) && (
                       <ThemedText.LabelMicro lineHeight="16px" color="neutral3">{`(${formatNumber({
