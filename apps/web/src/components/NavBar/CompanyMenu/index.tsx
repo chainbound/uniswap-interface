@@ -54,7 +54,7 @@ export function CompanyMenu() {
 
   return (
     // <NavIcon width="48" height="48" data-testid="uniswap-logo" />
-    <img src="/Cimages/demo_group.png" alt="Bolt Demo" style={{ width: 'auto', height: '35px' }} />
+    <img src="/demo/images/demo_group.png" alt="Bolt Demo" style={{ width: 'auto', height: '35px' }} />
 
     // <Popover ref={popoverRef} placement="bottom" hoverable stayInFrame allowFlip onOpenChange={setIsOpen}>
     //   <Popover.Trigger>
