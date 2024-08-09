@@ -337,7 +337,7 @@ function ShowBadLuckComponent() {
                   width: '100%',
                 }}
               >
-                No Bolt proposers in the lookahead window
+                No Bolt proposers in the lookahead window, try again later!
               </p>
             </div>
           </div>
