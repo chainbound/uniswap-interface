@@ -136,11 +136,11 @@ export function useSendCallback({
                   throw new UserRejectedRequestError(`Transfer failed: User rejected signature`)
                 } else if (error.message.includes('lookahead')) {
                   setNoProposerInTheLookahead(true)
-                  sleep(5_000).then(() => setNoProposerInTheLookahead(false))
+                  sleep(10_000).then(() => setNoProposerInTheLookahead(false))
                   throw error
                 } else if (error.message.includes('nonce')) {
                   setInternalError('nonce mismatch')
-                  sleep(5_000).then(() => setInternalError(undefined))
+                  sleep(10_000).then(() => setInternalError(undefined))
                   throw error
                 } else {
                   throw error
@@ -166,7 +166,7 @@ export function useSendCallback({
 
           // show the preconfirmed popup for 5s
           sleep(200).then(() => setPreconfirmedAtSlot({ slot: response.slot, latency: response.latency }))
-          sleep(5_500).then(() => setPreconfirmedAtSlot(undefined))
+          sleep(10_500).then(() => setPreconfirmedAtSlot(undefined))
 
           // now start polling for actual inclusion in a block
           provider!.waitForTransaction(txHash).then(async (receipt) => {

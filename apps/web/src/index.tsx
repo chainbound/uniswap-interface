@@ -126,7 +126,7 @@ createRoot(container).render(
     <HelmetProvider>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
-          <Router>
+          <Router basename="/demo">
             <LanguageProvider>
               <Web3Provider>
                 <StatsigProvider>

@@ -243,6 +243,20 @@ export function SendForm(props: SendFormProps) {
     <Trace page={InterfacePageNameLocal.Send}>
       <SendContextProvider>
         <SendFormInner {...props} />
+
+        {/* <div
+          style={{
+            height: 'auto',
+            width: '100%',
+            marginTop: '4px',
+          }}
+        >
+          <a href="https://t.me/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+            <Button width="100%" backgroundColor="#4881FF" hoverStyle={{ backgroundColor: '#8197EE' }}>
+              Join the Telegram group to get Helder ETH
+            </Button>
+          </a>
+        </div> */}
       </SendContextProvider>
     </Trace>
   )
