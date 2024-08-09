@@ -210,7 +210,7 @@ function ShowPreconfirmedComponent() {
       >
         <PopupContainer show>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <img src="/images/bolt_mascot_smile.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <img src="/demo/images/bolt_mascot_smile.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
             <div
               style={{
                 display: 'flex',
@@ -312,7 +312,11 @@ function ShowBadLuckComponent() {
       >
         <PopupContainer show>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <img src="/images/bolt_mascot_unhappy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <img
+              src="/demo/images/bolt_mascot_unhappy.png"
+              alt="bolt mascot"
+              style={{ width: '60px', height: '60px' }}
+            />
             <div
               style={{
                 display: 'flex',
@@ -333,7 +337,7 @@ function ShowBadLuckComponent() {
                   width: '100%',
                 }}
               >
-                No luck this time, try again later!
+                No Bolt proposers in the lookahead window, try again later!
               </p>
             </div>
           </div>
@@ -360,7 +364,11 @@ function ShowInternalErrorComponent() {
       >
         <PopupContainer show>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <img src="/images/bolt_mascot_unhappy.png" alt="bolt mascot" style={{ width: '60px', height: '60px' }} />
+            <img
+              src="/demo/images/bolt_mascot_unhappy.png"
+              alt="bolt mascot"
+              style={{ width: '60px', height: '60px' }}
+            />
             <div
               style={{
                 display: 'flex',

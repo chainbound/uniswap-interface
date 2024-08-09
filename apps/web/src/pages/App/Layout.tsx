@@ -60,12 +60,12 @@ export function AppLayout() {
           zIndex: 1,
           objectFit: 'cover',
         }}
-        src="/images/background.png"
+        src="/demo/images/background.png"
         alt="background"
       />
 
       <img
-        src="/images/bolt_logo.png"
+        src="/demo/images/bolt_logo.png"
         alt="Bolt Logo"
         style={{ width: 'auto', height: '35px', position: 'fixed', bottom: '15px', left: '15px', zIndex: 4000 }}
       />

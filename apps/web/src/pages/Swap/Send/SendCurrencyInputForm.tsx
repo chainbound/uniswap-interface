@@ -145,8 +145,9 @@ const AlternateCurrencyDisplay = ({
       })
 
   // From "The art of Mocking" chapter 2
-  // Assuming the input is in ETH with a price of 3,149.69 USD
-  const formattedAmountOutMocked = (Number(displayedValue) * 3149.69).toString() + '$'
+  const formattedAmountOutMocked = inputInFiat
+    ? (Number(displayedValue) / 2628.69).toPrecision(2) + 'ETH'
+    : (Number(displayedValue) * 2628.69).toString() + '$'
 
   const displayCurrency = inputInFiat ? inputCurrency?.symbol ?? '' : activeCurrency
   const formattedAlternateCurrency = formattedAmountOut + ' ' + displayCurrency
